@@ -62,7 +62,7 @@ while running:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			running = False
-		if event.type == pygame.VIDEORESIZE:
+		elif event.type == pygame.VIDEORESIZE:
 			screensize = event.size
 			screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 	# Drawing
@@ -79,15 +79,23 @@ while running:
 	# Draw the player
 	playersize = 10
 	pygame.draw.rect(screen, (0, 0, 0), pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize))
+	# Player movement
+	keys = pygame.key.get_pressed()
+	if keys[pygame.K_LEFT]:
+		playerv[0] -= 2
+	elif keys[pygame.K_RIGHT]:
+		playerv[0] += 2
 	# Tick the player
 	playerpos[0] += playerv[0]
 	playerpos[1] += playerv[1]
 	if playerpos[1] < playersize / 2:
 		playerpos[1] = playersize / 2
 		playerv[1] = 0
+		if keys[pygame.K_UP]:
+			playerv[1] += 5
 	else:
 		playerv[1] -= 0.1
-	playerv[0] *= 0.995
+	playerv[0] *= 0.7
 	# Flip
 	pygame.display.flip()
 	c.tick(60)
