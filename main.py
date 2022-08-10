@@ -38,7 +38,7 @@ def drawTree() -> pygame.Surface:
 class House:
 	def __init__(self):
 		self.house = drawHouse()
-		self.trees = [drawTree(), drawTree(), drawTree()]
+		self.trees = [drawTree() for i in range(random.choices([1, 2, 3], weights=[4, 4, 1], k=1)[0])]
 		self.treeoffset = random.randint(140, 200)
 	def draw(self) -> pygame.Surface:
 		house = pygame.Surface(self.house.get_size(), pygame.SRCALPHA)
@@ -52,7 +52,7 @@ class House:
 			cum_x += 80
 		return combined
 
-display = House().draw()
+world: "list[House]" = []
 
 c = pygame.time.Clock()
 running = True
@@ -63,7 +63,16 @@ while running:
 		if event.type == pygame.VIDEORESIZE:
 			screensize = event.size
 			screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+	# Drawing
 	screen.fill((0, 0, 0))
-	screen.blit(display, (100, 100))
+	cum_x = 0
+	for h in world:
+		s = h.draw()
+		screen.blit(s, (cum_x, screensize[1] - s.get_height()))
+		cum_x += s.get_width()
+	# Adding new houses
+	if cum_x < screensize[0]:
+		world.append(House())
+	# Flip
 	pygame.display.flip()
 	c.tick(60)
