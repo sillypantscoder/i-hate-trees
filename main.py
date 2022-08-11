@@ -76,123 +76,129 @@ class House:
 				pygame.draw.rect(combined, (0, 255, 0), pygame.Rect(cum_x - (barWidth / 2), 200, barWidth * (tree["treeStrength"] / tree["maxTreeStrength"]), barHeight))
 		return combined
 
-world: "list[House]" = []
-playerpos: "list[int, int]" = [0, 150] # CENTER position of player
-playerv: "list[int, int]" = [0, 0] # Velocity of player
-amount_wood: int = 0
-chainsaw_heat: int = 0
-
 max_chainsaw_heat: int = 100
 playersize = 10
 
-c = pygame.time.Clock()
-running = True
-while running:
-	keys = pygame.key.get_pressed()
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			running = False
-		elif event.type == pygame.VIDEORESIZE:
-			screensize = event.size
-			screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
-	# Drawing
-	screen.fill((150, 255, 255))
-	#treerects = []
-	scroll = (screensize[0] / 2) - playerpos[0]
-	cum_x = scroll + 0
-	for h in world:
-		# Draw
-		s = h.draw()
-		screen.blit(s, (cum_x, screensize[1] - s.get_height()))
-		# Check for collisions
-		tree_x = cum_x + h.treeoffset
-		for t in h.trees:
-			hit = t["hitbox"]
-			hit = pygame.Rect(hit.x + tree_x + (-scroll), hit.y + (screensize[1] - t["img"].get_height()), hit.width, hit.height)
-			hit.normalize()
-			if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 0, 0), hit.move(scroll, 0), 1) # Tree hitboxes
-			# Collision
-			if 		hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))) \
-				or 	hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))):
-				# Detect side of collision
-				if playerpos[1] + (playersize * 1) > screensize[1] - hit.top:
-					# Top
-					playerpos[1] = (screensize[1] - hit.top) + (playersize / 2)
-					playerv[1] = 0
-					# Jump if necessary
-					if keys[pygame.K_UP] or keys[pygame.K_w]:
-						playerv[1] += 5
-				elif playerpos[0] < hit.centerx:
-					# Left
-					playerpos[0] = hit.left - (playersize / 2)
-					playerv[0] = 0
+def MAIN():
+	global screen
+	global screensize
+
+	world: "list[House]" = []
+	playerpos: "list[int, int]" = [0, 150] # CENTER position of player
+	playerv: "list[int, int]" = [0, 0] # Velocity of player
+	amount_wood: int = 0
+	chainsaw_heat: int = 0
+
+	c = pygame.time.Clock()
+	running = True
+	while running:
+		keys = pygame.key.get_pressed()
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
+			elif event.type == pygame.VIDEORESIZE:
+				screensize = event.size
+				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+		# Drawing
+		screen.fill((150, 255, 255))
+		#treerects = []
+		scroll = (screensize[0] / 2) - playerpos[0]
+		cum_x = scroll + 0
+		for h in world:
+			# Draw
+			s = h.draw()
+			screen.blit(s, (cum_x, screensize[1] - s.get_height()))
+			# Check for collisions
+			tree_x = cum_x + h.treeoffset
+			for t in h.trees:
+				hit = t["hitbox"]
+				hit = pygame.Rect(hit.x + tree_x + (-scroll), hit.y + (screensize[1] - t["img"].get_height()), hit.width, hit.height)
+				hit.normalize()
+				if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 0, 0), hit.move(scroll, 0), 1) # Tree hitboxes
+				# Collision
+				if 		hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))) \
+					or 	hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))):
+					# Detect side of collision
+					if playerpos[1] + (playersize * 1) > screensize[1] - hit.top:
+						# Top
+						playerpos[1] = (screensize[1] - hit.top) + (playersize / 2)
+						playerv[1] = 0
+						# Jump if necessary
+						if keys[pygame.K_UP] or keys[pygame.K_w]:
+							playerv[1] += 5
+					elif playerpos[0] < hit.centerx:
+						# Left
+						playerpos[0] = hit.left - (playersize / 2)
+						playerv[0] = 0
+					else:
+						# Right
+						playerpos[0] = hit.right + (playersize / 2)
+						playerv[0] = 0
+				# Chainsaw
+				chainsaw_range = 50
+				chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
+				if chainsaw_heat < max_chainsaw_heat:
+					if keys[pygame.K_SPACE]:
+						if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1) # Active chainsaw hitbox
+						if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
+							t["treeStrength"] -= 1
+							if t["treeStrength"] <= 0:
+								# Cut down the tree!
+								# Convert to stump
+								stump = drawTreeStump(t["treeWidth"])
+								t["hitbox"] = stump["hitbox"]
+								t["img"] = stump["img"]
+								# Get wood
+								amount_wood = round(amount_wood + t["maxTreeStrength"])
 				else:
-					# Right
-					playerpos[0] = hit.right + (playersize / 2)
-					playerv[0] = 0
-			# Chainsaw
-			chainsaw_range = 50
-			chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
-			if chainsaw_heat < max_chainsaw_heat:
-				if keys[pygame.K_SPACE]:
-					if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1) # Active chainsaw hitbox
-					if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
-						t["treeStrength"] -= 1
-						if t["treeStrength"] <= 0:
-							# Cut down the tree!
-							# Convert to stump
-							stump = drawTreeStump(t["treeWidth"])
-							t["hitbox"] = stump["hitbox"]
-							t["img"] = stump["img"]
-							# Get wood
-							amount_wood = round(amount_wood + t["maxTreeStrength"])
-			else:
-				if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1) # Overheated chainsaw hitbox
-			tree_x += 80
-		cum_x += s.get_width()
-	# Adding new houses
-	if cum_x < screensize[0]:
-		world.append(House())
-	# Draw the player
-	playerrect = pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize)
-	pygame.draw.rect(screen, (0, 0, 0), playerrect)
-	# Player movement
-	if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-		playerv[0] -= 2
-	elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-		playerv[0] += 2
-	# Tick the player
-	playerpos[0] += playerv[0]
-	playerpos[1] += playerv[1]
-	if playerpos[1] < playersize / 2:
-		playerpos[1] = playersize / 2
-		playerv[1] = 0
-		if keys[pygame.K_UP] or keys[pygame.K_w]:
-			playerv[1] += 5
-	else:
-		playerv[1] -= 0.1
-	playerv[0] *= 0.7
-	if playerpos[0] < -screensize[0]:
-		playerpos[0] = -screensize[0]
-		playerv[0] = 250
-	# Chainsaw heat
-	if keys[pygame.K_SPACE]:
-		chainsaw_heat += 1
-	else:
-		chainsaw_heat -= 0.4
-	if chainsaw_heat <= 0:
-		chainsaw_heat = 0
-	else:
-		bar_width = 50
-		bar_height = 10
-		shift = [screensize[0] / 2, screensize[1] - playerpos[1]]
-		shift[0] -= bar_width / 2
-		shift[1] -= playersize * 3.5
-		pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(0, 0, bar_width, bar_height).move(*shift))
-		pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(0, 0, ((max_chainsaw_heat - chainsaw_heat) / max_chainsaw_heat) * bar_width, bar_height).move(*shift))
-	# Draw the text
-	text = font.render(f"Wood: {amount_wood}", True, (0, 0, 0))
-	screen.blit(text, (0, 0))
-	# Flip
-	pygame.display.flip()
-	c.tick(60)
+					if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1) # Overheated chainsaw hitbox
+				tree_x += 80
+			cum_x += s.get_width()
+		# Adding new houses
+		if cum_x < screensize[0]:
+			world.append(House())
+		# Draw the player
+		playerrect = pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize)
+		pygame.draw.rect(screen, (0, 0, 0), playerrect)
+		# Player movement
+		if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+			playerv[0] -= 2
+		elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+			playerv[0] += 2
+		# Tick the player
+		playerpos[0] += playerv[0]
+		playerpos[1] += playerv[1]
+		if playerpos[1] < playersize / 2:
+			playerpos[1] = playersize / 2
+			playerv[1] = 0
+			if keys[pygame.K_UP] or keys[pygame.K_w]:
+				playerv[1] += 5
+		else:
+			playerv[1] -= 0.1
+		playerv[0] *= 0.7
+		if playerpos[0] < -screensize[0]:
+			playerpos[0] = -screensize[0]
+			playerv[0] = 250
+		# Chainsaw heat
+		if keys[pygame.K_SPACE]:
+			chainsaw_heat += 1
+		else:
+			chainsaw_heat -= 0.4
+		if chainsaw_heat <= 0:
+			chainsaw_heat = 0
+		else:
+			bar_width = 50
+			bar_height = 10
+			shift = [screensize[0] / 2, screensize[1] - playerpos[1]]
+			shift[0] -= bar_width / 2
+			shift[1] -= playersize * 3.5
+			pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(0, 0, bar_width, bar_height).move(*shift))
+			pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(0, 0, ((max_chainsaw_heat - chainsaw_heat) / max_chainsaw_heat) * bar_width, bar_height).move(*shift))
+		# Draw the text
+		text = font.render(f"Wood: {amount_wood}", True, (0, 0, 0))
+		screen.blit(text, (0, 0))
+		# Flip
+		pygame.display.flip()
+		c.tick(60)
+
+MAIN()
