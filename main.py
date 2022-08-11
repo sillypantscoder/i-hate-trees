@@ -61,6 +61,7 @@ playersize = 10
 c = pygame.time.Clock()
 running = True
 while running:
+	keys = pygame.key.get_pressed()
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			running = False
@@ -91,7 +92,7 @@ while running:
 					playerpos[1] = (screensize[1] - hit.top) + (playersize / 2)
 					playerv[1] = 0
 					# Jump if necessary
-					if keys[pygame.K_UP]:
+					if keys[pygame.K_UP] or keys[pygame.K_w]:
 						playerv[1] += 5
 				elif playerpos[0] < hit.centerx:
 					# Left
@@ -110,10 +111,9 @@ while running:
 	playerrect = pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize)
 	pygame.draw.rect(screen, (0, 0, 0), playerrect)
 	# Player movement
-	keys = pygame.key.get_pressed()
-	if keys[pygame.K_LEFT]:
+	if keys[pygame.K_LEFT] or keys[pygame.K_a]:
 		playerv[0] -= 2
-	elif keys[pygame.K_RIGHT]:
+	elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
 		playerv[0] += 2
 	# Tick the player
 	playerpos[0] += playerv[0]
@@ -121,7 +121,7 @@ while running:
 	if playerpos[1] < playersize / 2:
 		playerpos[1] = playersize / 2
 		playerv[1] = 0
-		if keys[pygame.K_UP]:
+		if keys[pygame.K_UP] or keys[pygame.K_w]:
 			playerv[1] += 5
 	else:
 		playerv[1] -= 0.1
