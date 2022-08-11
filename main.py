@@ -33,7 +33,7 @@ def drawTree() -> pygame.Surface:
 	pygame.draw.rect(tree, (50, 0, 10), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight), 10)
 	# Leaves
 	pygame.draw.circle(tree, (0, 150, 0), (treeX + (treeWidth / 2), 200 - treeHeight), 50)
-	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight)}
+	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight + playersize)}
 
 class House:
 	def __init__(self):
@@ -87,7 +87,7 @@ while running:
 			if 		hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))) \
 				or 	hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))):
 				# Detect side of collision
-				if playerpos[1] - (playersize / 2) < hit.centery:
+				if playerpos[1] + (playersize * 1) > screensize[1] - hit.top:
 					# Top
 					playerpos[1] = (screensize[1] - hit.top) + (playersize / 2)
 					playerv[1] = 0
