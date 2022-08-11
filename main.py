@@ -80,13 +80,20 @@ while running:
 		tree_x = cum_x + h.treeoffset
 		for t in h.trees:
 			hit = t["hitbox"]
-			hit = pygame.Rect(hit.x + tree_x + (-scroll), hit.y + (screensize[0] - t["img"].get_height()), hit.width, hit.height)
+			hit = pygame.Rect(hit.x + tree_x + (-scroll), hit.y + (screensize[1] - t["img"].get_height()), hit.width, hit.height)
 			hit.normalize()
 			pygame.draw.rect(screen, (255, 0, 0), hit.move(scroll, 0), 1)
-			if hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] - playerpos[1])) \
-				or hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] - playerpos[1])):
+			if 		hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))) \
+				or 	hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))):
 				# Detect side of collision
-				if playerpos[0] < hit.centerx:
+				if playerpos[1] - (playersize / 2) < hit.centery:
+					# Top
+					playerpos[1] = (screensize[1] - hit.top) + (playersize / 2)
+					playerv[1] = 0
+					# Jump if necessary
+					if keys[pygame.K_UP]:
+						playerv[1] += 5
+				elif playerpos[0] < hit.centerx:
 					# Left
 					playerpos[0] = hit.left - (playersize / 2)
 					playerv[0] = 0
