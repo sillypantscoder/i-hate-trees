@@ -56,6 +56,8 @@ world: "list[House]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
 
+playersize = 10
+
 c = pygame.time.Clock()
 running = True
 while running:
@@ -67,18 +69,39 @@ while running:
 			screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 	# Drawing
 	screen.fill((150, 255, 255))
+	#treerects = []
 	scroll = (screensize[0] / 2) - playerpos[0]
 	cum_x = scroll + 0
 	for h in world:
+		# Draw
 		s = h.draw()
 		screen.blit(s, (cum_x, screensize[1] - s.get_height()))
+		# Check for collisions
+		tree_x = cum_x + h.treeoffset
+		for t in h.trees:
+			hit = t["hitbox"]
+			hit = pygame.Rect(hit.x + tree_x + (-scroll), hit.y + (screensize[0] - t["img"].get_height()), hit.width, hit.height)
+			hit.normalize()
+			pygame.draw.rect(screen, (255, 0, 0), hit.move(scroll, 0), 1)
+			if hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] - playerpos[1])) \
+				or hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] - playerpos[1])):
+				# Detect side of collision
+				if playerpos[0] < hit.centerx:
+					# Left
+					playerpos[0] = hit.left - (playersize / 2)
+					playerv[0] = 0
+				else:
+					# Right
+					playerpos[0] = hit.right + (playersize / 2)
+					playerv[0] = 0
+			tree_x += 80
 		cum_x += s.get_width()
 	# Adding new houses
 	if cum_x < screensize[0]:
 		world.append(House())
 	# Draw the player
-	playersize = 10
-	pygame.draw.rect(screen, (0, 0, 0), pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize))
+	playerrect = pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize)
+	pygame.draw.rect(screen, (0, 0, 0), playerrect)
 	# Player movement
 	keys = pygame.key.get_pressed()
 	if keys[pygame.K_LEFT]:
