@@ -88,6 +88,7 @@ def MAIN():
 	playerv: "list[int, int]" = [0, 0] # Velocity of player
 	amount_wood: int = 0
 	chainsaw_heat: int = 0
+	particles = []
 
 	c = pygame.time.Clock()
 	running = True
@@ -150,8 +151,43 @@ def MAIN():
 								t["img"] = stump["img"]
 								# Get wood
 								amount_wood = round(amount_wood + t["maxTreeStrength"])
+							# Add wood particle
+							if random.random() < 0.25:
+								woodsize = random.randint(1, 20)
+								wood = pygame.Surface((woodsize, woodsize))
+								wood.fill(random.choice([
+									(30, 15, 5),
+									(100, 50, 0),
+									(50, 0, 10)
+								]))
+								particles.append({
+									"pos": [
+										random.randint(hit.left, hit.right),
+										random.randint(hit.top, hit.bottom) + (-(screensize[1] - t["img"].get_height())) + (-hit.height)
+									],
+									"v": [random.randint(-7, 7) / 10, random.randint(7, 14) / 10],
+									"time": random.randint(35, 120),
+									"img": wood,
+									"gravity": 0.1
+								})
 				else:
 					if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1) # Overheated chainsaw hitbox
+					# Add smoke particle
+					if random.random() < 0.08:
+						woodsize = random.randint(25, 50)
+						wood = pygame.Surface((woodsize, woodsize), pygame.SRCALPHA)
+						wood.fill((0, 0, 0, 0))
+						pygame.draw.circle(wood, (0, 0, 0, 100), (woodsize / 2, woodsize / 2), woodsize / 2)
+						particles.append({
+							"pos": [
+								playerpos[0] + (woodsize / -2),
+								playerpos[1] - (woodsize / -2)
+							],
+							"v": [random.randint(-7, 7) / 10, random.randint(7, 14) / 10],
+							"time": random.randint(10, 70),
+							"img": wood,
+							"gravity": 0
+						})
 				tree_x += 80
 			cum_x += s.get_width()
 		# Adding new houses
@@ -194,6 +230,15 @@ def MAIN():
 			shift[1] -= playersize * 3.5
 			pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(0, 0, bar_width, bar_height).move(*shift))
 			pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(0, 0, ((max_chainsaw_heat - chainsaw_heat) / max_chainsaw_heat) * bar_width, bar_height).move(*shift))
+		# Draw the particles
+		for p in particles:
+			p["pos"][0] += p["v"][0]
+			p["pos"][1] += p["v"][1]
+			p["v"][1] -= p["gravity"]
+			p["time"] -= 1
+			screen.blit(p["img"], (p["pos"][0] + scroll, screensize[1] - p["pos"][1]))
+			if p["time"] <= 0:
+				particles.remove(p)
 		# Draw the text
 		text = font.render(f"Wood: {amount_wood}", True, (0, 0, 0))
 		screen.blit(text, (0, 0))
