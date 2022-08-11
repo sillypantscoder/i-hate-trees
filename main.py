@@ -73,7 +73,9 @@ world: "list[House]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
 amount_wood: int = 0
+chainsaw_heat: int = 0
 
+max_chainsaw_heat: int = 100
 playersize = 10
 
 c = pygame.time.Clock()
@@ -122,20 +124,23 @@ while running:
 					playerpos[0] = hit.right + (playersize / 2)
 					playerv[0] = 0
 			# Chainsaw
-			if keys[pygame.K_SPACE]:
-				chainsaw_range = 50
-				chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
-				pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1)
-				if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
-					t["treeStrength"] -= 1
-					if t["treeStrength"] <= 0:
-						# Cut down the tree!
-						# Convert to stump
-						stump = drawTreeStump(t["treeWidth"])
-						t["hitbox"] = stump["hitbox"]
-						t["img"] = stump["img"]
-						# Get wood
-						amount_wood = round(amount_wood + t["maxTreeStrength"])
+			chainsaw_range = 50
+			chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
+			if chainsaw_heat < max_chainsaw_heat:
+				if keys[pygame.K_SPACE]:
+					pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1)
+					if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
+						t["treeStrength"] -= 1
+						if t["treeStrength"] <= 0:
+							# Cut down the tree!
+							# Convert to stump
+							stump = drawTreeStump(t["treeWidth"])
+							t["hitbox"] = stump["hitbox"]
+							t["img"] = stump["img"]
+							# Get wood
+							amount_wood = round(amount_wood + t["maxTreeStrength"])
+			else:
+				pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1)
 			tree_x += 80
 		cum_x += s.get_width()
 	# Adding new houses
@@ -160,6 +165,21 @@ while running:
 	else:
 		playerv[1] -= 0.1
 	playerv[0] *= 0.7
+	# Chainsaw heat
+	if keys[pygame.K_SPACE]:
+		chainsaw_heat += 1
+	else:
+		chainsaw_heat -= 0.4
+	if chainsaw_heat <= 0:
+		chainsaw_heat = 0
+	else:
+		bar_width = 50
+		bar_height = 10
+		shift = [250, screensize[1] - playerpos[1]]
+		shift[0] -= bar_width / 2
+		shift[1] -= playersize * 3.5
+		pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(0, 0, bar_width, bar_height).move(*shift))
+		pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(0, 0, (chainsaw_heat / max_chainsaw_heat) * bar_width, bar_height).move(*shift))
 	# Draw the text
 	text = font.render(f"Wood: {amount_wood}", True, (0, 0, 0))
 	screen.blit(text, (0, 0))
