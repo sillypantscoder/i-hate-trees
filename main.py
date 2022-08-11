@@ -64,9 +64,14 @@ class House:
 		combined.blit(house, (0, 0))
 		cum_x = self.treeoffset + 0
 		for tree in self.trees:
-			#if tree["treeStrength"] > 0:
 			combined.blit(tree["img"], (cum_x, 100))
 			cum_x += 80
+			# Strength bar
+			if tree["treeStrength"] > 0 and tree["treeStrength"] < tree["maxTreeStrength"]:
+				barWidth = 60
+				barHeight = 10
+				pygame.draw.rect(combined, (255, 0, 0), pygame.Rect(cum_x - (barWidth / 2), 200, barWidth, barHeight))
+				pygame.draw.rect(combined, (0, 255, 0), pygame.Rect(cum_x - (barWidth / 2), 200, barWidth * (tree["treeStrength"] / tree["maxTreeStrength"]), barHeight))
 		return combined
 
 world: "list[House]" = []
@@ -179,7 +184,7 @@ while running:
 		shift[0] -= bar_width / 2
 		shift[1] -= playersize * 3.5
 		pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(0, 0, bar_width, bar_height).move(*shift))
-		pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(0, 0, (chainsaw_heat / max_chainsaw_heat) * bar_width, bar_height).move(*shift))
+		pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(0, 0, ((max_chainsaw_heat - chainsaw_heat) / max_chainsaw_heat) * bar_width, bar_height).move(*shift))
 	# Draw the text
 	text = font.render(f"Wood: {amount_wood}", True, (0, 0, 0))
 	screen.blit(text, (0, 0))
