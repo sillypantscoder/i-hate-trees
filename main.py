@@ -3,6 +3,8 @@
 import pygame
 import random
 
+SHOW_DEBUGS = False
+
 screensize: "tuple[int, int]" = (500, 500)
 screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 
@@ -108,7 +110,7 @@ while running:
 			hit = t["hitbox"]
 			hit = pygame.Rect(hit.x + tree_x + (-scroll), hit.y + (screensize[1] - t["img"].get_height()), hit.width, hit.height)
 			hit.normalize()
-			pygame.draw.rect(screen, (255, 0, 0), hit.move(scroll, 0), 1)
+			if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 0, 0), hit.move(scroll, 0), 1) # Tree hitboxes
 			# Collision
 			if 		hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))) \
 				or 	hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))):
@@ -133,7 +135,7 @@ while running:
 			chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
 			if chainsaw_heat < max_chainsaw_heat:
 				if keys[pygame.K_SPACE]:
-					pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1)
+					if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1) # Active chainsaw hitbox
 					if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
 						t["treeStrength"] -= 1
 						if t["treeStrength"] <= 0:
@@ -145,7 +147,7 @@ while running:
 							# Get wood
 							amount_wood = round(amount_wood + t["maxTreeStrength"])
 			else:
-				pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1)
+				if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1) # Overheated chainsaw hitbox
 			tree_x += 80
 		cum_x += s.get_width()
 	# Adding new houses
@@ -170,6 +172,9 @@ while running:
 	else:
 		playerv[1] -= 0.1
 	playerv[0] *= 0.7
+	if playerpos[0] < -screensize[0]:
+		playerpos[0] = -screensize[0]
+		playerv[0] = 250
 	# Chainsaw heat
 	if keys[pygame.K_SPACE]:
 		chainsaw_heat += 1
@@ -180,7 +185,7 @@ while running:
 	else:
 		bar_width = 50
 		bar_height = 10
-		shift = [250, screensize[1] - playerpos[1]]
+		shift = [screensize[0] / 2, screensize[1] - playerpos[1]]
 		shift[0] -= bar_width / 2
 		shift[1] -= playersize * 3.5
 		pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(0, 0, bar_width, bar_height).move(*shift))
