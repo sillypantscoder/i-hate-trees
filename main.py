@@ -1,8 +1,13 @@
+#!/usr/bin/python3
+
 import pygame
 import random
 
 screensize: "tuple[int, int]" = (500, 500)
 screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+
+pygame.font.init()
+font = pygame.font.SysFont("monospace", 20)
 
 def drawHouse() -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
@@ -33,7 +38,7 @@ def drawTree() -> pygame.Surface:
 	pygame.draw.rect(tree, (50, 0, 10), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight), 10)
 	# Leaves
 	pygame.draw.circle(tree, (0, 150, 0), (treeX + (treeWidth / 2), 200 - treeHeight), 50)
-	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight + playersize), "treeStrength": (treeWidth * treeHeight) // 100, "treeWidth": treeWidth}
+	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight + playersize), "maxTreeStrength": (treeWidth * treeHeight) // 100, "treeStrength": (treeWidth * treeHeight) // 100, "treeWidth": treeWidth}
 
 def drawTreeStump(oldTreeWidth) -> pygame.Surface:
 	tree: pygame.Surface = pygame.Surface((200, 200), pygame.SRCALPHA)
@@ -67,6 +72,7 @@ class House:
 world: "list[House]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
+amount_wood: int = 0
 
 playersize = 10
 
@@ -123,10 +129,13 @@ while running:
 				if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
 					t["treeStrength"] -= 1
 					if t["treeStrength"] <= 0:
+						# Cut down the tree!
 						# Convert to stump
 						stump = drawTreeStump(t["treeWidth"])
 						t["hitbox"] = stump["hitbox"]
 						t["img"] = stump["img"]
+						# Get wood
+						amount_wood = round(amount_wood + t["maxTreeStrength"])
 			tree_x += 80
 		cum_x += s.get_width()
 	# Adding new houses
@@ -151,6 +160,9 @@ while running:
 	else:
 		playerv[1] -= 0.1
 	playerv[0] *= 0.7
+	# Draw the text
+	text = font.render(f"Wood: {amount_wood}", True, (0, 0, 0))
+	screen.blit(text, (0, 0))
 	# Flip
 	pygame.display.flip()
 	c.tick(60)
