@@ -33,6 +33,17 @@ def drawTree() -> pygame.Surface:
 	pygame.draw.rect(tree, (50, 0, 10), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight), 10)
 	# Leaves
 	pygame.draw.circle(tree, (0, 150, 0), (treeX + (treeWidth / 2), 200 - treeHeight), 50)
+	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight + playersize), "treeStrength": (treeWidth * treeHeight) // 100, "treeWidth": treeWidth}
+
+def drawTreeStump(oldTreeWidth) -> pygame.Surface:
+	tree: pygame.Surface = pygame.Surface((200, 200), pygame.SRCALPHA)
+	tree.fill((255, 255, 255, 0))
+	treeX = 50 + random.randint(-5, 5)
+	treeWidth = oldTreeWidth + random.randint(-5, 5)
+	treeHeight = random.randint(5, 30) + (treeWidth / 2)
+	# Stump
+	pygame.draw.rect(tree, (100, 50, 0), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight))
+	pygame.draw.rect(tree, (50, 0, 10), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight), 10)
 	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight + playersize)}
 
 class House:
@@ -48,6 +59,7 @@ class House:
 		combined.blit(house, (0, 0))
 		cum_x = self.treeoffset + 0
 		for tree in self.trees:
+			#if tree["treeStrength"] > 0:
 			combined.blit(tree["img"], (cum_x, 100))
 			cum_x += 80
 		return combined
@@ -84,6 +96,7 @@ while running:
 			hit = pygame.Rect(hit.x + tree_x + (-scroll), hit.y + (screensize[1] - t["img"].get_height()), hit.width, hit.height)
 			hit.normalize()
 			pygame.draw.rect(screen, (255, 0, 0), hit.move(scroll, 0), 1)
+			# Collision
 			if 		hit.collidepoint((playerpos[0] - (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))) \
 				or 	hit.collidepoint((playerpos[0] + (playersize / 2), screensize[1] + (-playerpos[1]) + (playersize / 2))):
 				# Detect side of collision
@@ -102,6 +115,18 @@ while running:
 					# Right
 					playerpos[0] = hit.right + (playersize / 2)
 					playerv[0] = 0
+			# Chainsaw
+			if keys[pygame.K_SPACE]:
+				chainsaw_range = 50
+				chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
+				pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1)
+				if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
+					t["treeStrength"] -= 1
+					if t["treeStrength"] <= 0:
+						# Convert to stump
+						stump = drawTreeStump(t["treeWidth"])
+						t["hitbox"] = stump["hitbox"]
+						t["img"] = stump["img"]
 			tree_x += 80
 		cum_x += s.get_width()
 	# Adding new houses
