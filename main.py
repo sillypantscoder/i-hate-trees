@@ -71,9 +71,15 @@ def SHOP():
 	global amount_wood
 	global max_chainsaw_heat
 	global chainsaw_strength
+	global chainsaw_cooling
+	global chainsaw_range
 	running = True
 	while running:
-		selected_option = MENU("shop", ["exit", f"upgrade heat capacity (100/{amount_wood} wood)", f"upgrade chainsaw power (7000/{amount_wood} wood)"])
+		selected_option = MENU("shop", ["exit",
+			f"upgrade heat capacity (100/{amount_wood} wood)",
+			f"upgrade chainsaw power (800/{amount_wood} wood)",
+			f"upgrade cooling speed (500/{amount_wood} wood)",
+			f"upgrade chainsaw range (850/{amount_wood} wood)"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -83,9 +89,17 @@ def SHOP():
 				amount_wood -= 100
 				max_chainsaw_heat += 10
 		elif selected_option == 2:
-			if amount_wood >= 7000:
-				amount_wood -= 7000
-				chainsaw_strength += 10
+			if amount_wood >= 800:
+				amount_wood -= 800
+				chainsaw_strength += 1
+		elif selected_option == 3:
+			if amount_wood >= 500:
+				amount_wood -= 500
+				chainsaw_cooling += 1
+		elif selected_option == 4:
+			if amount_wood >= 850:
+				amount_wood -= 850
+				chainsaw_range += 10
 
 def drawHouse() -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
@@ -162,6 +176,8 @@ playerv: "list[int, int]" = [0, 0] # Velocity of player
 amount_wood: int = 0
 chainsaw_heat: int = 0
 chainsaw_strength: int = 1
+chainsaw_cooling: int = 0.4
+chainsaw_range: int = 50
 
 def GAMEPLAY():
 	global screen
@@ -226,7 +242,6 @@ def GAMEPLAY():
 							playerpos[0] = hit.right + (playersize / 2)
 							playerv[0] = 0
 					# Chainsaw
-					chainsaw_range = 50
 					chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
 					if chainsaw_heat < max_chainsaw_heat:
 						if keys[pygame.K_SPACE]:
@@ -311,7 +326,7 @@ def GAMEPLAY():
 		if keys[pygame.K_SPACE]:
 			chainsaw_heat += 1
 		else:
-			chainsaw_heat -= 0.4
+			chainsaw_heat -= chainsaw_cooling
 		if chainsaw_heat <= 0:
 			chainsaw_heat = 0
 		else:
