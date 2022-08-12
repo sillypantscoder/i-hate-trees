@@ -89,6 +89,8 @@ def MAIN():
 	amount_wood: int = 0
 	chainsaw_heat: int = 0
 	particles = []
+	chainsaw0 = pygame.image.load("chainsaw_0.png")
+	chainsaw1 = pygame.image.load("chainsaw_1.png")
 
 	c = pygame.time.Clock()
 	running = True
@@ -141,6 +143,8 @@ def MAIN():
 				if chainsaw_heat < max_chainsaw_heat:
 					if keys[pygame.K_SPACE]:
 						if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1) # Active chainsaw hitbox
+						chstatus = random.choice([True, False])
+						screen.blit(chainsaw0 if chstatus else chainsaw1, (playerpos[0] - (chainsaw_range / 2) + scroll, (screensize[1] - playerpos[1]) - (chainsaw_range / 2)))
 						if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
 							t["treeStrength"] -= 1
 							if t["treeStrength"] <= 0:
