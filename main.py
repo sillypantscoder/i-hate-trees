@@ -11,11 +11,11 @@ screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 pygame.font.init()
 font = pygame.font.SysFont("monospace", 20)
 
-def MAIN():
+def MENU(headertext, items):
 	global screen
 	global screensize
 
-	headerfont = pygame.font.SysFont("monospace", 35)
+	menufont = pygame.font.SysFont("monospace", 35)
 
 	c = pygame.time.Clock()
 	running = True
@@ -24,8 +24,7 @@ def MAIN():
 		mousepos = pygame.mouse.get_pos()
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				running = False
-				break
+				return -1
 			elif event.type == pygame.VIDEORESIZE:
 				screensize = event.size
 				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
@@ -33,25 +32,55 @@ def MAIN():
 				clicked = True
 		screen.fill((255, 255, 255))
 		# HEADER
-		header = headerfont.render("i hate trees", 1, (0, 0, 0))
+		header = menufont.render(headertext, 1, (0, 0, 0))
 		screen.blit(header, ((screensize[0] // 2) - (header.get_width() // 2), 10))
 		pygame.draw.line(screen, (0, 0, 0), (0, header.get_height() + 20), (screensize[0], header.get_height() + 20), 5)
-		# PLAY BUTTON
-		btn_text = headerfont.render("play", 1, (0, 0, 0)) # Render the text.
-		buttonPadding = 10 # Amount of padding around the text.
-		buttonY = header.get_height() + buttonPadding + (btn_text.get_height() // 2) + 40 # Top of button: bottom of header + padding + half the height of the text (as extra padding) + extra padding.
-		buttonRect = pygame.Rect(buttonPadding, buttonY, btn_text.get_height(), btn_text.get_height()) # Dimensions of the button.
-		pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.5) # === Draw the button. ===
-		screen.blit(btn_text, (buttonRect.right + buttonPadding, buttonY)) # Draw the text.
-		textRect = pygame.Rect(0, buttonY, screensize[0], btn_text.get_height()) # Dimensions of the text.
-		if textRect.collidepoint(mousepos): # If the mouse is over the text...
-			pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the hovered button.
-			if clicked: # If the text is clicked...
-				# Start the game.
-				running = GAMEPLAY()
+		last_height = header.get_height() * 1.5
+		# BUTTONS
+		btnindex = 0
+		for itemtext in items:
+			btn_text = menufont.render(itemtext, 1, (0, 0, 0)) # Render the text.
+			buttonPadding = 10 # Amount of padding around the text.
+			buttonY = last_height + buttonPadding + 40 # Top of button: bottom of last item + padding + extra padding.
+			buttonRect = pygame.Rect(buttonPadding, buttonY, btn_text.get_height(), btn_text.get_height()) # Dimensions of the button.
+			pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.5) # === Draw the button. ===
+			screen.blit(btn_text, (buttonRect.right + buttonPadding, buttonY)) # Draw the text.
+			textRect = pygame.Rect(0, buttonY, screensize[0], btn_text.get_height()) # Dimensions of the text.
+			if textRect.collidepoint(mousepos): # If the mouse is over the text...
+				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the hovered button.
+				if clicked: # If the text is clicked...
+					return btnindex # Return the index of the clicked button.
+			last_height = buttonY + btn_text.get_height() + buttonPadding
+			btnindex += 1
 		# Flip
 		pygame.display.flip()
 		c.tick(60)
+
+def MAIN():
+	running = True
+	while running:
+		selected_option = MENU("i hate trees", ["play", "shop"])
+		if selected_option == -1:
+			running = False
+		elif selected_option == 0:
+			running = GAMEPLAY()
+		elif selected_option == 1:
+			running = SHOP()
+
+def SHOP():
+	global amount_wood
+	global max_chainsaw_heat
+	running = True
+	while running:
+		selected_option = MENU("shop", ["exit", f"upgrade heat capacity (100/{amount_wood} wood)"])
+		if selected_option == -1:
+			return False
+		elif selected_option == 0:
+			return True
+		elif selected_option == 1:
+			if amount_wood >= 100:
+				amount_wood -= 100
+				max_chainsaw_heat += 10
 
 def drawHouse() -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
