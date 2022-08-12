@@ -67,6 +67,12 @@ def MAIN():
 		elif selected_option == 1:
 			running = SHOP()
 
+upgrade_prices = {
+	"heat_capacity": 100,
+	"chainsaw_power": 800,
+	"cooling_speed": 550,
+	"chainsaw_range": 850
+}
 def SHOP():
 	global amount_wood
 	global max_chainsaw_heat
@@ -76,30 +82,34 @@ def SHOP():
 	running = True
 	while running:
 		selected_option = MENU("shop", ["exit",
-			f"upgrade heat capacity (100/{amount_wood} wood)",
-			f"upgrade chainsaw power (800/{amount_wood} wood)",
-			f"upgrade cooling speed (500/{amount_wood} wood)",
-			f"upgrade chainsaw range (850/{amount_wood} wood)"])
+			f"upgrade heat capacity ({upgrade_prices['heat_capacity']}/{amount_wood} wood)",
+			f"upgrade chainsaw power ({upgrade_prices['chainsaw_power']}/{amount_wood} wood)",
+			f"upgrade cooling speed ({upgrade_prices['cooling_speed']}/{amount_wood} wood)",
+			f"upgrade chainsaw range ({upgrade_prices['chainsaw_power']}/{amount_wood} wood)"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
 			return True
 		elif selected_option == 1:
-			if amount_wood >= 100:
-				amount_wood -= 100
+			if amount_wood >= upgrade_prices["heat_capacity"]:
+				amount_wood -= upgrade_prices["heat_capacity"]
 				max_chainsaw_heat += 10
+				upgrade_prices["heat_capacity"] = round(upgrade_prices["heat_capacity"] * 1.1)
 		elif selected_option == 2:
-			if amount_wood >= 800:
-				amount_wood -= 800
+			if amount_wood >= upgrade_prices["chainsaw_power"]:
+				amount_wood -= upgrade_prices["chainsaw_power"]
 				chainsaw_strength += 1
+				upgrade_prices["chainsaw_power"] = round(upgrade_prices["chainsaw_power"] * 1.1)
 		elif selected_option == 3:
-			if amount_wood >= 500:
-				amount_wood -= 500
+			if amount_wood >= upgrade_prices["cooling_speed"]:
+				amount_wood -= upgrade_prices["cooling_speed"]
 				chainsaw_cooling += 1
+				upgrade_prices["cooling_speed"] = round(upgrade_prices["cooling_speed"] * 1.1)
 		elif selected_option == 4:
-			if amount_wood >= 850:
-				amount_wood -= 850
+			if amount_wood >= upgrade_prices["chainsaw_range"]:
+				amount_wood -= upgrade_prices["chainsaw_range"]
 				chainsaw_range += 10
+				upgrade_prices["chainsaw_range"] = round(upgrade_prices["chainsaw_range"] * 1.1)
 
 def drawHouse() -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
