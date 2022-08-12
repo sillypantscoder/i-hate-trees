@@ -59,13 +59,15 @@ def MENU(headertext, items):
 def MAIN():
 	running = True
 	while running:
-		selected_option = MENU("i hate trees", ["play", "shop"])
+		selected_option = MENU("i hate trees", ["play", "shop", "settings"])
 		if selected_option == -1:
 			running = False
 		elif selected_option == 0:
 			running = GAMEPLAY()
 		elif selected_option == 1:
 			running = SHOP()
+		elif selected_option == 2:
+			running = SETTINGS()
 
 upgrade_prices = {
 	"heat_capacity": 100,
@@ -85,7 +87,7 @@ def SHOP():
 			f"upgrade heat capacity ({upgrade_prices['heat_capacity']}/{amount_wood} wood)",
 			f"upgrade chainsaw power ({upgrade_prices['chainsaw_power']}/{amount_wood} wood)",
 			f"upgrade cooling speed ({upgrade_prices['cooling_speed']}/{amount_wood} wood)",
-			f"upgrade chainsaw range ({upgrade_prices['chainsaw_power']}/{amount_wood} wood)"])
+			f"upgrade chainsaw range ({upgrade_prices['chainsaw_range']}/{amount_wood} wood)"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -110,6 +112,34 @@ def SHOP():
 				amount_wood -= upgrade_prices["chainsaw_range"]
 				chainsaw_range += 10
 				upgrade_prices["chainsaw_range"] = round(upgrade_prices["chainsaw_range"] * 1.1)
+
+def SETTINGS():
+	global SHOW_DEBUGS
+	running = True
+	while running:
+		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", "update the game"])
+		if selected_option == -1:
+			return False
+		elif selected_option == 0:
+			return True
+		elif selected_option == 1:
+			SHOW_DEBUGS = not SHOW_DEBUGS
+		elif selected_option == 2:
+			from git import Repo
+			repo = Repo('.')
+			repo.git.fetch()
+			updates = repo.git.log('--no-decorate', '--pretty=Update to: %s%n\t%b', '..origin/main')[:-2]
+			updates = [x.split("\n\t\n") for x in updates.split("\n\n")]
+			# and combine into one list
+			updates = [x for y in updates for x in y]
+			# Now we have a list of updates; we can display them in a menu
+			opt = MENU("updates", ["cancel", *[(u.replace('\n\t', ' -- ') + " (latest)" if i == 0 else u.replace('\n\t', ' -- ')) for i, u in enumerate(updates)]])
+			if opt == -1:
+				return False
+			elif opt > 0:
+				updatessha = repo.git.log('--no-decorate', '--pretty=%H', '..origin/main').split("\n")[opt - 1]
+				print(repo.git.show(updatessha))
+				repo.git.reset('--hard', updatessha)
 
 def drawHouse() -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
@@ -268,6 +298,26 @@ def GAMEPLAY():
 									t["img"] = stump["img"]
 									# Get wood
 									amount_wood = round(amount_wood + t["maxTreeStrength"])
+									# Add lots of wood particles
+									for i in range(30):
+										if random.random() < 1:
+											woodsize = random.randint(1, 20)
+											wood = pygame.Surface((woodsize, woodsize))
+											wood.fill(random.choice([
+												(30, 15, 5),
+												(100, 50, 0),
+												(50, 0, 10)
+											]))
+											particles.append({
+												"pos": [
+													random.randint(hit.left, hit.right),
+													random.randint(hit.top, hit.bottom) + (-(screensize[1] - t["img"].get_height())) + (-hit.height)
+												],
+												"v": [random.randint(-11, 11) / 10, random.randint(7, 22) / 10],
+												"time": random.randint(35, 120),
+												"img": wood,
+												"gravity": 0.1
+											})
 								# Add wood particle
 								if random.random() < 0.25:
 									woodsize = random.randint(1, 20)
