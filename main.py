@@ -11,6 +11,48 @@ screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 pygame.font.init()
 font = pygame.font.SysFont("monospace", 20)
 
+def MAIN():
+	global screen
+	global screensize
+
+	headerfont = pygame.font.SysFont("monospace", 35)
+
+	c = pygame.time.Clock()
+	running = True
+	while running:
+		clicked = False
+		mousepos = pygame.mouse.get_pos()
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
+				break
+			elif event.type == pygame.VIDEORESIZE:
+				screensize = event.size
+				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				clicked = True
+		screen.fill((255, 255, 255))
+		# HEADER
+		header = headerfont.render("i hate trees", 1, (0, 0, 0))
+		screen.blit(header, ((screensize[0] // 2) - (header.get_width() // 2), 10))
+		pygame.draw.line(screen, (0, 0, 0), (0, header.get_height() + 20), (screensize[0], header.get_height() + 20), 5)
+		# PLAY BUTTON
+		btn_text = headerfont.render("play", 1, (0, 0, 0)) # Render the text.
+		buttonPadding = 10 # Amount of padding around the text.
+		buttonY = header.get_height() + buttonPadding + (btn_text.get_height() // 2) + 40 # Top of button: bottom of header + padding + half the height of the text (as extra padding) + extra padding.
+		buttonRect = pygame.Rect(buttonPadding, buttonY, btn_text.get_height(), btn_text.get_height()) # Dimensions of the button.
+		pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.5) # === Draw the button. ===
+		screen.blit(btn_text, (buttonRect.right + buttonPadding, buttonY)) # Draw the text.
+		textRect = pygame.Rect(0, buttonY, screensize[0], btn_text.get_height()) # Dimensions of the text.
+		if textRect.collidepoint(mousepos): # If the mouse is over the text...
+			pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the hovered button.
+			if clicked: # If the text is clicked...
+				# Start the game.
+				running = GAMEPLAY()
+		# Flip
+		pygame.display.flip()
+		c.tick(60)
+
 def drawHouse() -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
 	house.fill((255, 255, 255, 0))
@@ -77,17 +119,23 @@ class House:
 		return combined
 
 max_chainsaw_heat: int = 100
-playersize = 10
+playersize: int = 10
 
-def MAIN():
+world: "list[House]" = []
+playerpos: "list[int, int]" = [0, 150] # CENTER position of player
+playerv: "list[int, int]" = [0, 0] # Velocity of player
+amount_wood: int = 0
+chainsaw_heat: int = 0
+
+def GAMEPLAY():
 	global screen
 	global screensize
+	global world
+	global playerpos
+	global playerv
+	global amount_wood
+	global chainsaw_heat
 
-	world: "list[House]" = []
-	playerpos: "list[int, int]" = [0, 150] # CENTER position of player
-	playerv: "list[int, int]" = [0, 0] # Velocity of player
-	amount_wood: int = 0
-	chainsaw_heat: int = 0
 	particles = []
 	chainsaw0 = pygame.image.load("chainsaw_0.png")
 	chainsaw1 = pygame.image.load("chainsaw_1.png")
@@ -98,10 +146,13 @@ def MAIN():
 		keys = pygame.key.get_pressed()
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				running = False
+				return False
 			elif event.type == pygame.VIDEORESIZE:
 				screensize = event.size
 				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+			elif event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_ESCAPE:
+					return True
 		# Drawing
 		screen.fill((150, 255, 255))
 		#treerects = []
