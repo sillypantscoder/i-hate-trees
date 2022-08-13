@@ -2,6 +2,7 @@
 
 import pygame
 import random
+import sounds
 
 SHOW_DEBUGS = False
 
@@ -57,17 +58,21 @@ def MENU(headertext, items):
 		c.tick(60)
 
 def MAIN():
+	sounds.menu_start()
 	running = True
 	while running:
 		selected_option = MENU("i hate trees", ["play", "shop", "settings"])
 		if selected_option == -1:
 			running = False
 		elif selected_option == 0:
+			if background_music: sounds.gameplay_start()
 			running = GAMEPLAY()
+			if background_music: sounds.menu_start()
 		elif selected_option == 1:
 			running = SHOP()
 		elif selected_option == 2:
 			running = SETTINGS()
+	sounds.stop_background()
 
 upgrade_prices = {
 	"heat_capacity": 100,
@@ -115,9 +120,10 @@ def SHOP():
 
 def SETTINGS():
 	global SHOW_DEBUGS
+	global background_music
 	running = True
 	while running:
-		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", "update the game"])
+		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", f"background music {'ON' if background_music else 'OFF'}", "update the game"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -125,6 +131,12 @@ def SETTINGS():
 		elif selected_option == 1:
 			SHOW_DEBUGS = not SHOW_DEBUGS
 		elif selected_option == 2:
+			background_music = not background_music
+			if background_music:
+				sounds.menu_start()
+			else:
+				sounds.stop_background()
+		elif selected_option == 3:
 			from git import Repo
 			repo = Repo('.')
 			repo.git.fetch()
@@ -209,6 +221,7 @@ class House:
 
 max_chainsaw_heat: int = 100
 playersize: int = 10
+background_music: bool = True
 
 world: "list[House]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
@@ -229,8 +242,8 @@ def GAMEPLAY():
 	global chainsaw_heat
 
 	particles = []
-	chainsaw0 = pygame.image.load("chainsaw_0.png")
-	chainsaw1 = pygame.image.load("chainsaw_1.png")
+	chainsaw0 = pygame.image.load("assets/chainsaw_0.png")
+	chainsaw1 = pygame.image.load("assets/chainsaw_1.png")
 
 	c = pygame.time.Clock()
 	running = True
@@ -245,6 +258,11 @@ def GAMEPLAY():
 			elif event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_ESCAPE:
 					return True
+				elif event.key == pygame.K_SPACE:
+					sounds.start_chainsaw()
+			elif event.type == pygame.KEYUP:
+				if event.key == pygame.K_SPACE:
+					sounds.stop_chainsaw()
 		# Drawing
 		screen.fill((150, 255, 255))
 		#treerects = []
