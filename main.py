@@ -61,7 +61,7 @@ def MAIN():
 	sounds.menu_start()
 	running = True
 	while running:
-		selected_option = MENU("i hate trees", ["play", "shop", "settings"])
+		selected_option = MENU("i hate trees", ["play", "shop", "settings", "save/load"])
 		if selected_option == -1:
 			running = False
 		elif selected_option == 0:
@@ -72,6 +72,8 @@ def MAIN():
 			running = SHOP()
 		elif selected_option == 2:
 			running = SETTINGS()
+		elif selected_option == 3:
+			running = SAVELOAD()
 	sounds.stop_background()
 
 upgrade_prices = {
@@ -152,6 +154,61 @@ def SETTINGS():
 				updatessha = repo.git.log('--no-decorate', '--pretty=%H', '..origin/main').split("\n")[opt - 1]
 				print(repo.git.show(updatessha))
 				repo.git.reset('--hard', updatessha)
+
+def SAVELOAD():
+	global amount_wood
+	global max_chainsaw_heat
+	global chainsaw_strength
+	global chainsaw_cooling
+	global chainsaw_range
+	global world
+	global playerpos
+	running = True
+	while running:
+		selected_option = MENU("save/load", ["exit", "save", "load"])
+		if selected_option == -1:
+			return False
+		elif selected_option == 0:
+			return True
+		elif selected_option == 1:
+			import json
+			obj = {
+				"amount_wood": amount_wood,
+				"max_chainsaw_heat": max_chainsaw_heat,
+				"chainsaw_strength": chainsaw_strength,
+				"chainsaw_cooling": chainsaw_cooling,
+				"chainsaw_range": chainsaw_range,
+				"playerpos": playerpos,
+				"world": [
+					[{"maxTreeStrength": t["maxTreeStrength"], "treeStrength": t["treeStrength"]} for t in h.trees] for h in world
+				]
+			}
+			f = open("save.json", "w")
+			f.write(json.dumps(obj))
+			f.close()
+		elif selected_option == 2:
+			import json
+			f = open("save.json", "r")
+			obj = json.loads(f.read())
+			f.close()
+			amount_wood = obj["amount_wood"]
+			max_chainsaw_heat = obj["max_chainsaw_heat"]
+			chainsaw_strength = obj["chainsaw_strength"]
+			chainsaw_cooling = obj["chainsaw_cooling"]
+			chainsaw_range = obj["chainsaw_range"]
+			playerpos = obj["playerpos"]
+			world = []
+			for i, h in enumerate(obj["world"]):
+				world.append(House(i * 250))
+				world[i].trees = []
+				for j, t in enumerate(h):
+					world[i].trees.append(drawTree(j * 100))
+					world[i].trees[j]["maxTreeStrength"] = t["maxTreeStrength"]
+					world[i].trees[j]["treeStrength"] = t["treeStrength"]
+					if world[i].trees[j]["treeStrength"] <= 0:
+						stump = drawTreeStump(world[i].trees[j]["treeWidth"])
+						world[i].trees[j]["hitbox"] = stump["hitbox"]
+						world[i].trees[j]["img"] = stump["img"]
 
 def drawHouse() -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
@@ -271,7 +328,7 @@ def GAMEPLAY():
 		cum_x = scroll + 0
 		for h in world:
 			# Draw
-			if cum_x >= -h.width:
+			if cum_x >= -h.width and cum_x <= screensize[0]:
 				s = h.draw()
 				screen.blit(s, (cum_x, screensize[1] - s.get_height()))
 				# Check for collisions
