@@ -80,7 +80,8 @@ upgrade_prices = {
 	"heat_capacity": 100,
 	"chainsaw_power": 800,
 	"cooling_speed": 550,
-	"chainsaw_range": 850
+	"chainsaw_range": 850,
+	"chainsaw_upgrades": 2000
 }
 def SHOP():
 	global amount_wood
@@ -88,13 +89,15 @@ def SHOP():
 	global chainsaw_strength
 	global chainsaw_cooling
 	global chainsaw_range
+	global chainsaw_upgrade_status
 	running = True
 	while running:
 		selected_option = MENU("shop", ["exit",
 			f"upgrade heat capacity ({upgrade_prices['heat_capacity']}/{amount_wood} wood)",
 			f"upgrade chainsaw power ({upgrade_prices['chainsaw_power']}/{amount_wood} wood)",
 			f"upgrade cooling speed ({upgrade_prices['cooling_speed']}/{amount_wood} wood)",
-			f"upgrade chainsaw range ({upgrade_prices['chainsaw_range']}/{amount_wood} wood)"])
+			f"upgrade chainsaw range ({upgrade_prices['chainsaw_range']}/{amount_wood} wood)",
+			f"upgrade your chainsaw ({upgrade_prices['chainsaw_upgrades']}/{amount_wood} wood)"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -119,6 +122,15 @@ def SHOP():
 				amount_wood -= upgrade_prices["chainsaw_range"]
 				chainsaw_range += 10
 				upgrade_prices["chainsaw_range"] = round(upgrade_prices["chainsaw_range"] * 1.1)
+		elif selected_option == 5:
+			if amount_wood >= upgrade_prices["chainsaw_upgrades"]:
+				amount_wood -= upgrade_prices["chainsaw_upgrades"]
+				upgrade_prices["chainsaw_upgrades"] = round(upgrade_prices["chainsaw_upgrades"] * 1.1)
+				chainsawname = "chainsaw"
+				for i in range(chainsaw_upgrade_status):
+					chainsawname = chainsaw_upgrade_mod[i][1].replace("%s", chainsawname)
+				MENU("upgrade", [chainsaw_upgrade_mod[chainsaw_upgrade_status][0].replace("%s", chainsawname)])
+				chainsaw_upgrade_status += 1
 
 def SETTINGS():
 	global SHOW_DEBUGS
@@ -289,6 +301,18 @@ chainsaw_heat: int = 0
 chainsaw_strength: int = 1
 chainsaw_cooling: int = 0.4
 chainsaw_range: int = 50
+chainsaw_upgrade_status: int = 0
+chainsaw_upgrade_mod: "list[str]" = [
+	["Your %s now has a handle!", 							"%shandle"],
+	["Your %s is now faster!", 								"faster%s"],
+	["Your %s now includes a fighter jet!", 				"fighterjet%s"],
+	["Your %s now includes bombs!", 						"bomb%s"],
+	["Your %s also has a laser gun!", 						"lasergun%s"],
+	["Your %s can now launch air strikes!", 				"airstrike%s"],
+	["Your %s is now obliterating the world!", 				"obliterating%s"],
+	["Your %s now includes a UFO to abduct the trees!", 	"ufo%s"],
+	["Your %s now has a black hole!!", 						"blackhole%s"],
+]
 
 def GAMEPLAY():
 	global screen
@@ -307,6 +331,8 @@ def GAMEPLAY():
 	running = True
 	while running:
 		keys = pygame.key.get_pressed()
+		mousepos = pygame.mouse.get_pos()
+		mousedown = pygame.mouse.get_pressed()[0]
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				return False
@@ -321,6 +347,23 @@ def GAMEPLAY():
 			elif event.type == pygame.KEYUP:
 				if event.key == pygame.K_SPACE:
 					sounds.stop_chainsaw()
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				if event.button == 1 and mousepos[1] > screensize[1] * (2 / 3):
+					sounds.start_chainsaw()
+			elif event.type == pygame.MOUSEBUTTONUP:
+				if event.button == 1 and mousepos[1] > screensize[1] * (2 / 3):
+					sounds.stop_chainsaw()
+			elif event.type == pygame.MOUSEMOTION:
+				# compare mouse position to previous mouse position
+				prevmousepos = (mousepos[0] - event.rel[0], mousepos[1] - event.rel[1])
+				if mousepos[1] > screensize[1] * (2 / 3) and prevmousepos[1] <= screensize[1] * (2 / 3):
+					sounds.start_chainsaw()
+				elif mousepos[1] <= screensize[1] * (2 / 3) and prevmousepos[1] > screensize[1] * (2 / 3):
+					sounds.stop_chainsaw()
+				#if mousepos[1] > screensize[1] * (2 / 3):
+					#sounds.start_chainsaw()
+				#else:
+					#sounds.stop_chainsaw()
 		# Drawing
 		screen.fill((150, 255, 255))
 		#treerects = []
@@ -360,7 +403,7 @@ def GAMEPLAY():
 					# Chainsaw
 					chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
 					if chainsaw_heat < max_chainsaw_heat:
-						if keys[pygame.K_SPACE]:
+						if keys[pygame.K_SPACE] or (mousedown and mousepos[1] > screensize[1] * (2 / 3)):
 							if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1) # Active chainsaw hitbox
 							chstatus = random.choice([True, False])
 							screen.blit(chainsaw0 if chstatus else chainsaw1, (playerpos[0] - (chainsaw_range / 2) + scroll, (screensize[1] - playerpos[1]) - (chainsaw_range / 2)))
@@ -440,9 +483,9 @@ def GAMEPLAY():
 		playerrect = pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize)
 		pygame.draw.rect(screen, (0, 0, 0), playerrect)
 		# Player movement
-		if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+		if keys[pygame.K_LEFT] or keys[pygame.K_a] or (mousedown and mousepos[0] < screensize[0] / 2 and mousepos[1] < screensize[1] * (2/3)):
 			playerv[0] -= 2
-		elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+		elif keys[pygame.K_RIGHT] or keys[pygame.K_d] or (mousedown and mousepos[0] > screensize[0] / 2 and mousepos[1] < screensize[1] * (2/3)):
 			playerv[0] += 2
 		# Tick the player
 		playerpos[0] += playerv[0]
@@ -450,7 +493,7 @@ def GAMEPLAY():
 		if playerpos[1] < playersize / 2:
 			playerpos[1] = playersize / 2
 			playerv[1] = 0
-			if keys[pygame.K_UP] or keys[pygame.K_w]:
+			if keys[pygame.K_UP] or keys[pygame.K_w] or (mousedown and mousepos[1] < screensize[1] / 3):
 				playerv[1] += 5
 		else:
 			playerv[1] -= 0.1
