@@ -171,12 +171,13 @@ def drawHouse() -> pygame.Surface:
 	pygame.draw.line(house, (50, 0, 10), (160, 165), (220, 165), 10)
 	return house
 
-def drawTree() -> pygame.Surface:
+def drawTree(x) -> pygame.Surface:
 	tree: pygame.Surface = pygame.Surface((200, 200), pygame.SRCALPHA)
 	tree.fill((255, 255, 255, 0))
 	treeX = 50
-	treeWidth = random.randint(30, 65)
-	treeHeight = random.randint(50, 100) + (treeWidth / 2)
+	treeMod = 1 + ((x * x) / 10000000)
+	treeWidth = random.randint(round(30 * treeMod), round(65 * treeMod))
+	treeHeight = random.randint(round(50 * treeMod), round(100 * treeMod)) + (treeWidth / 2)
 	# Base
 	pygame.draw.rect(tree, (100, 50, 0), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight))
 	pygame.draw.rect(tree, (50, 0, 10), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight), 10)
@@ -196,9 +197,9 @@ def drawTreeStump(oldTreeWidth) -> pygame.Surface:
 	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight + playersize)}
 
 class House:
-	def __init__(self):
+	def __init__(self, x):
 		self.house = drawHouse()
-		self.trees = [drawTree() for i in range(random.choices([1, 2, 3], weights=[4, 4, 1], k=1)[0])]
+		self.trees = [drawTree(x) for i in range(random.choices([1, 2, 3], weights=[4, 4, 1], k=1)[0])]
 		self.treeoffset = random.randint(140, 200)
 		self.width = self.draw().get_width()
 	def draw(self) -> pygame.Surface:
@@ -377,7 +378,7 @@ def GAMEPLAY():
 			cum_x += h.width
 		# Adding new houses
 		if cum_x < screensize[0]:
-			world.append(House())
+			world.append(House(cum_x))
 		# Draw the player
 		playerrect = pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize)
 		pygame.draw.rect(screen, (0, 0, 0), playerrect)
