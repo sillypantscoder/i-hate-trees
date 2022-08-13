@@ -11,6 +11,16 @@ If you use your chainsaw too much, it will overheat. Your chainsaw's heat is sho
 
 You can press Escape to go back to the main menu. In the shop, you can buy various upgrades for your chainsaw.
 
+## mobile version
+
+You can get to the mobile version by going into the settings. In this mode, tapping on the screen will use actions, instead of the keyboard. The screen is divided into a 3x3 grid, and tapping on different cells do different things:
+
+| | Left | Center | Right |
+| --- | --- | --- | --- |
+| Top | Jump + move left | Jump | Jump + move right |
+| Center | Move left | None | Move right |
+| Bottom | Use chainsaw + move left | Use chainsaw | Use chainsaw + move right |
+
 ## credits
 
 Game design: Jason

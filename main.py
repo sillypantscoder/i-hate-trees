@@ -343,12 +343,29 @@ def GAMEPLAY():
 			elif event.type == pygame.VIDEORESIZE:
 				screensize = event.size
 				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+				# Jinglefoodle Bingledoodle Quandavius Quanderfoodle the Third died of air traffic
+			elif event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_ESCAPE:
+					return True
 		# Drawing
 		screen.fill((150, 255, 255))
 		if MOBILE_VERSION:
-			overlay = pygame.Surface((screensize[0], screensize[1] // 3), pygame.SRCALPHA)
+			# Top
+			overlay = pygame.Surface((screensize[0] // 3, screensize[1] // 3), pygame.SRCALPHA)
+			overlay.fill((0, 0, 0, 100))
+			screen.blit(overlay, (screensize[0] // 3, 0))
+			# Left
+			overlay = pygame.Surface((screensize[0] // 3, screensize[1] // 3), pygame.SRCALPHA)
 			overlay.fill((0, 0, 0, 100))
 			screen.blit(overlay, (0, screensize[1] // 3))
+			# Right
+			overlay = pygame.Surface((screensize[0] // 3, screensize[1] // 3), pygame.SRCALPHA)
+			overlay.fill((0, 0, 0, 100))
+			screen.blit(overlay, (screensize[0] // (3 / 2), screensize[1] // 3))
+			# Bottom
+			overlay = pygame.Surface((screensize[0] // 3, screensize[1] // 3), pygame.SRCALPHA)
+			overlay.fill((0, 0, 0, 100))
+			screen.blit(overlay, (screensize[0] // 3, screensize[1] // (3 / 2)))
 		#treerects = []
 		scroll = (screensize[0] / 2) - playerpos[0]
 		cum_x = scroll + 0
@@ -472,7 +489,7 @@ def GAMEPLAY():
 			or (MOBILE_VERSION and mousedown and mousepos[0] < screensize[0] / 3):
 				playerv[0] -= 2
 		elif keys[pygame.K_RIGHT] or keys[pygame.K_d] \
-			or (MOBILE_VERSION and mousedown and mousepos[0] > screensize[0] / 3 and mousepos[1] < screensize[1] * (2/3)) \
+			or (MOBILE_VERSION and mousedown and mousepos[0] > screensize[0] * (2/3) and mousepos[1] < screensize[1] * (2/3)) \
 			or (MOBILE_VERSION and mousedown and mousepos[0] > screensize[0] * (2/3)):
 			playerv[0] += 2
 		# Tick the player
@@ -481,7 +498,7 @@ def GAMEPLAY():
 		if playerpos[1] < playersize / 2:
 			playerpos[1] = playersize / 2
 			playerv[1] = 0
-			if keys[pygame.K_UP] or keys[pygame.K_w] or (mousedown and mousepos[1] < screensize[1] / 3):
+			if keys[pygame.K_UP] or keys[pygame.K_w] or (MOBILE_VERSION and mousedown and mousepos[1] < screensize[1] / 3):
 				playerv[1] += 5
 		else:
 			playerv[1] -= 0.1
