@@ -24,3 +24,20 @@ def gameplay_start():
 
 def stop_background():
 	mixer.music.stop()
+
+chainsaw_active_status = False
+chainsaw_previous_status = False
+
+def chainsaw_active():
+	global chainsaw_active_status
+	chainsaw_active_status = True
+
+def chainsaw_active_tick():
+	global chainsaw_active_status
+	global chainsaw_previous_status
+	if chainsaw_active_status and not chainsaw_previous_status:
+		start_chainsaw()
+	elif not chainsaw_active_status and chainsaw_previous_status:
+		stop_chainsaw()
+	chainsaw_previous_status = chainsaw_active_status
+	chainsaw_active_status = False

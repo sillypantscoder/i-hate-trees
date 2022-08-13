@@ -5,6 +5,7 @@ import random
 import sounds
 
 SHOW_DEBUGS = False
+MOBILE_VERSION = False
 
 screensize: "tuple[int, int]" = (500, 500)
 screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
@@ -135,9 +136,10 @@ def SHOP():
 def SETTINGS():
 	global SHOW_DEBUGS
 	global background_music
+	global MOBILE_VERSION
 	running = True
 	while running:
-		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", f"background music {'ON' if background_music else 'OFF'}", "update the game"])
+		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", f"background music {'ON' if background_music else 'OFF'}", f"mobile version {'ON' if MOBILE_VERSION else 'OFF'}", "update the game"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -151,6 +153,8 @@ def SETTINGS():
 			else:
 				sounds.stop_background()
 		elif selected_option == 3:
+			MOBILE_VERSION = not MOBILE_VERSION
+		elif selected_option == 4:
 			from git import Repo
 			repo = Repo('.')
 			repo.git.fetch()
@@ -339,33 +343,12 @@ def GAMEPLAY():
 			elif event.type == pygame.VIDEORESIZE:
 				screensize = event.size
 				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
-			elif event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_ESCAPE:
-					return True
-				elif event.key == pygame.K_SPACE:
-					sounds.start_chainsaw()
-			elif event.type == pygame.KEYUP:
-				if event.key == pygame.K_SPACE:
-					sounds.stop_chainsaw()
-			elif event.type == pygame.MOUSEBUTTONDOWN:
-				if event.button == 1 and mousepos[1] > screensize[1] * (2 / 3):
-					sounds.start_chainsaw()
-			elif event.type == pygame.MOUSEBUTTONUP:
-				if event.button == 1 and mousepos[1] > screensize[1] * (2 / 3):
-					sounds.stop_chainsaw()
-			elif event.type == pygame.MOUSEMOTION:
-				# compare mouse position to previous mouse position
-				prevmousepos = (mousepos[0] - event.rel[0], mousepos[1] - event.rel[1])
-				if mousepos[1] > screensize[1] * (2 / 3) and prevmousepos[1] <= screensize[1] * (2 / 3):
-					sounds.start_chainsaw()
-				elif mousepos[1] <= screensize[1] * (2 / 3) and prevmousepos[1] > screensize[1] * (2 / 3):
-					sounds.stop_chainsaw()
-				#if mousepos[1] > screensize[1] * (2 / 3):
-					#sounds.start_chainsaw()
-				#else:
-					#sounds.stop_chainsaw()
 		# Drawing
 		screen.fill((150, 255, 255))
+		if MOBILE_VERSION:
+			overlay = pygame.Surface((screensize[0], screensize[1] // 3), pygame.SRCALPHA)
+			overlay.fill((0, 0, 0, 100))
+			screen.blit(overlay, (0, screensize[1] // 3))
 		#treerects = []
 		scroll = (screensize[0] / 2) - playerpos[0]
 		cum_x = scroll + 0
@@ -403,7 +386,8 @@ def GAMEPLAY():
 					# Chainsaw
 					chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
 					if chainsaw_heat < max_chainsaw_heat:
-						if keys[pygame.K_SPACE] or (mousedown and mousepos[1] > screensize[1] * (2 / 3)):
+						if keys[pygame.K_SPACE] or (MOBILE_VERSION and mousedown and mousepos[1] > screensize[1] * (2 / 3)):
+							sounds.chainsaw_active()
 							if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1) # Active chainsaw hitbox
 							chstatus = random.choice([True, False])
 							screen.blit(chainsaw0 if chstatus else chainsaw1, (playerpos[0] - (chainsaw_range / 2) + scroll, (screensize[1] - playerpos[1]) - (chainsaw_range / 2)))
@@ -483,9 +467,13 @@ def GAMEPLAY():
 		playerrect = pygame.Rect((screensize[0] / 2) - (playersize / 2), (screensize[1] - playerpos[1]) - (playersize / 2), playersize, playersize)
 		pygame.draw.rect(screen, (0, 0, 0), playerrect)
 		# Player movement
-		if keys[pygame.K_LEFT] or keys[pygame.K_a] or (mousedown and mousepos[0] < screensize[0] / 2 and mousepos[1] < screensize[1] * (2/3)):
-			playerv[0] -= 2
-		elif keys[pygame.K_RIGHT] or keys[pygame.K_d] or (mousedown and mousepos[0] > screensize[0] / 2 and mousepos[1] < screensize[1] * (2/3)):
+		if keys[pygame.K_LEFT] or keys[pygame.K_a] \
+			or (MOBILE_VERSION and mousedown and mousepos[0] < screensize[0] / 3 and mousepos[1] < screensize[1] * (2/3)) \
+			or (MOBILE_VERSION and mousedown and mousepos[0] < screensize[0] / 3):
+				playerv[0] -= 2
+		elif keys[pygame.K_RIGHT] or keys[pygame.K_d] \
+			or (MOBILE_VERSION and mousedown and mousepos[0] > screensize[0] / 3 and mousepos[1] < screensize[1] * (2/3)) \
+			or (MOBILE_VERSION and mousedown and mousepos[0] > screensize[0] * (2/3)):
 			playerv[0] += 2
 		# Tick the player
 		playerpos[0] += playerv[0]
@@ -502,7 +490,7 @@ def GAMEPLAY():
 			playerpos[0] = -screensize[0]
 			playerv[0] = 250
 		# Chainsaw heat
-		if keys[pygame.K_SPACE]:
+		if sounds.chainsaw_previous_status:
 			chainsaw_heat += 1
 		else:
 			chainsaw_heat -= chainsaw_cooling
@@ -531,5 +519,6 @@ def GAMEPLAY():
 		# Flip
 		pygame.display.flip()
 		c.tick(60)
+		sounds.chainsaw_active_tick()
 
 MAIN()
