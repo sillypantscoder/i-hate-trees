@@ -330,6 +330,8 @@ def GAMEPLAY():
 	particles = []
 	chainsaw0 = pygame.image.load("assets/chainsaw_0.png")
 	chainsaw1 = pygame.image.load("assets/chainsaw_1.png")
+	mobile_centertap: int = 0
+	mobile_centertap_display: int = 0
 
 	c = pygame.time.Clock()
 	running = True
@@ -347,6 +349,12 @@ def GAMEPLAY():
 			elif event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_ESCAPE:
 					return True
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				if event.button == 1:
+					# if mouse is in center 3rd of screen:
+					if mousepos[0] > screensize[0] / 3 and mousepos[0] < screensize[0] / 3 * 2:
+						if mousepos[1] > screensize[1] / 3 and mousepos[1] < screensize[1] / 3 * 2:
+							mobile_centertap += 60
 		# Drawing
 		screen.fill((150, 255, 255))
 		if MOBILE_VERSION:
@@ -390,7 +398,7 @@ def GAMEPLAY():
 							playerpos[1] = (screensize[1] - hit.top) + (playersize / 2)
 							playerv[1] = 0
 							# Jump if necessary
-							if keys[pygame.K_UP] or keys[pygame.K_w]:
+							if keys[pygame.K_UP] or keys[pygame.K_w] or (MOBILE_VERSION and mousedown and mousepos[1] < screensize[1] / 3):
 								playerv[1] += 5
 						elif playerpos[0] < hit.centerx:
 							# Left
@@ -459,6 +467,8 @@ def GAMEPLAY():
 									})
 					else:
 						if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1) # Overheated chainsaw hitbox
+						if keys[pygame.K_SPACE] or (MOBILE_VERSION and mousedown and mousepos[1] > screensize[1] * (2 / 3)):
+							sounds.chainsaw_active()
 						# Add smoke particle
 						if random.random() < 0.08:
 							woodsize = random.randint(25, 50)
@@ -506,6 +516,18 @@ def GAMEPLAY():
 		if playerpos[0] < -screensize[0]:
 			playerpos[0] = -screensize[0]
 			playerv[0] = 250
+		if MOBILE_VERSION:
+			mobile_centertap -= 1
+			mobile_centertap_display = (mobile_centertap_display + mobile_centertap) / 2
+			if mobile_centertap < 0:
+				mobile_centertap = 0
+			if mobile_centertap > 250:
+				return True
+			if mobile_centertap > 105:
+				overlay = pygame.Surface((screensize[0] // 3, screensize[1] // 3), pygame.SRCALPHA)
+				overlay.fill((0, 0, 0, 0))
+				pygame.draw.circle(overlay, (0, 0, 0, 100), (overlay.get_width() / 2, overlay.get_height() / 2), mobile_centertap_display - 105)
+				screen.blit(overlay, (screensize[0] // 3, screensize[1] // 3))
 		# Chainsaw heat
 		if sounds.chainsaw_previous_status:
 			chainsaw_heat += 1
