@@ -4,6 +4,7 @@ import pygame
 import random
 import sounds
 import json
+from localization import loc, set_lang, getlanglist, get_lang
 
 SHOW_DEBUGS = False
 MOBILE_VERSION = False
@@ -72,12 +73,13 @@ def MAIN():
 	MOBILE_VERSION = settings["mobile_version"]
 	background_music = settings["background_music"]
 	sounds_active = settings["sounds_active"]
+	set_lang(settings["lang"])
 	if background_music:
 		sounds.menu_start()
 	# Gameplay
 	running = True
 	while running:
-		selected_option = MENU("i hate trees", ["play", "shop", "settings", "save/load"])
+		selected_option = MENU(loc("Home screen - Title"), [loc("Home screen - Play"), loc("Home screen - Shop"), loc("Home screen - Settings"), loc("Home screen - Save/load")])
 		if selected_option == -1:
 			running = False
 		elif selected_option == 0:
@@ -108,12 +110,12 @@ def SHOP():
 	global chainsaw_upgrade_status
 	running = True
 	while running:
-		selected_option = MENU("shop", ["exit",
-			f"upgrade heat capacity ({upgrade_prices['heat_capacity']}/{amount_wood} wood)",
-			f"upgrade chainsaw power ({upgrade_prices['chainsaw_power']}/{amount_wood} wood)",
-			f"upgrade cooling speed ({upgrade_prices['cooling_speed']}/{amount_wood} wood)",
-			f"upgrade chainsaw range ({upgrade_prices['chainsaw_range']}/{amount_wood} wood)",
-			f"upgrade your chainsaw ({upgrade_prices['chainsaw_upgrades']}/{amount_wood} wood)"])
+		selected_option = MENU(loc("Home screen - Shop"), [loc("Menus - Exit"),
+			f"{loc('Shop - Heat')} ({upgrade_prices['heat_capacity']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f"{loc('Shop - Power')} ({upgrade_prices['chainsaw_power']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f"{loc('Shop - Cooling')} ({upgrade_prices['cooling_speed']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f"{loc('Shop - Range')} ({upgrade_prices['chainsaw_range']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f"{loc('Shop - Upgrade')} ({upgrade_prices['chainsaw_upgrades']}/{amount_wood} {loc('Gameplay - Amount of wood')})"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -145,7 +147,7 @@ def SHOP():
 				chainsawname = "chainsaw"
 				for i in range(chainsaw_upgrade_status):
 					chainsawname = chainsaw_upgrade_mod[i][1].replace("%s", chainsawname)
-				MENU("upgrade", [chainsaw_upgrade_mod[chainsaw_upgrade_status][0].replace("%s", chainsawname)])
+				MENU(loc("Shop - Upgrade Header"), [chainsaw_upgrade_mod[chainsaw_upgrade_status][0].replace("%s", chainsawname)])
 				chainsaw_upgrade_status += 1
 
 def SETTINGS():
@@ -155,7 +157,9 @@ def SETTINGS():
 	global MOBILE_VERSION
 	running = True
 	while running:
-		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", f"background music {'ON' if background_music else 'OFF'}", f"sounds {'ON' if sounds_active else 'OFF'}", f"mobile version {'ON' if MOBILE_VERSION else 'OFF'}", "update the game"])
+		on = loc("Settings - On")
+		off = loc("Settings - Off")
+		selected_option = MENU(loc("Home screen - Settings"), [loc("Menus - Exit"), f"{loc('Settings - Hitboxes')} {on if SHOW_DEBUGS else off}", f"{loc('Settings - Music')} {on if background_music else off}", f"{loc('Settings - Sounds')} {on if sounds_active else off}", f"{loc('Settings - Mobile')} {on if MOBILE_VERSION else off}", loc("Settings - Update"), loc("Settings - Language")])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -177,21 +181,28 @@ def SETTINGS():
 			from git import Repo
 			repo = Repo('.')
 			repo.git.fetch()
-			updates = repo.git.log('--no-decorate', '--pretty=Update to: %s%n\t%b', '..origin/main')[:-2]
+			updates = repo.git.log('--no-decorate', '--pretty=LOCRESETHERE %s%n\t%b', '..origin/main')[:-2].replace("LOCRESETHERE", loc("Settings - Reset Here"))
 			updates = [x.split("\n\t\n") for x in updates.split("\n\n")]
 			# and combine into one list
 			updates = [x for y in updates for x in y]
 			# Now we have a list of updates; we can display them in a menu
-			opt = MENU("updates", ["cancel", *[(u.replace('\n\t', ' -- ') + " (latest)" if i == 0 else u.replace('\n\t', ' -- ')) for i, u in enumerate(updates)]])
+			opt = MENU(loc("Settings - Update Header"), [loc("Menus - Cancel"), *[(u.replace('\n\t', ' -- ') + " " + loc("Settings - Update Latest Version") if i == 0 else u.replace('\n\t', ' -- ')) for i, u in enumerate(updates)]])
 			if opt == -1:
 				return False
 			elif opt > 0:
 				updatessha = repo.git.log('--no-decorate', '--pretty=%H', '..origin/main').split("\n")[opt - 1]
 				print(repo.git.show(updatessha))
 				repo.git.reset('--hard', updatessha)
+		elif selected_option == 6:
+			langs = getlanglist()
+			option = MENU(loc("Settings - Language"), langs)
+			if option == -1:
+				return False
+			else:
+				set_lang(langs[option])
 		# Save settings
 		f = open("settings.json", "w")
-		f.write(json.dumps({"show_debugs": SHOW_DEBUGS, "background_music": background_music, "sounds_active": sounds_active, "mobile_version": MOBILE_VERSION}))
+		f.write(json.dumps({"show_debugs": SHOW_DEBUGS, "background_music": background_music, "sounds_active": sounds_active, "mobile_version": MOBILE_VERSION, "lang": get_lang()}))
 		f.close()
 
 def SAVELOAD():
@@ -204,7 +215,7 @@ def SAVELOAD():
 	global playerpos
 	running = True
 	while running:
-		selected_option = MENU("save/load", ["exit", "save", "load"])
+		selected_option = MENU(loc("Home screen - Save/load"), [loc("Menus - Exit"), loc("Files - Save"), loc("Files - Load")])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -329,15 +340,8 @@ chainsaw_cooling: int = 0.4
 chainsaw_range: int = 50
 chainsaw_upgrade_status: int = 0
 chainsaw_upgrade_mod: "list[str]" = [
-	["Your %s now has a handle!", 							"%shandle"],
-	["Your %s is now faster!", 								"faster%s"],
-	["Your %s now includes a fighter jet!", 				"fighterjet%s"],
-	["Your %s now includes bombs!", 						"bomb%s"],
-	["Your %s also has a laser gun!", 						"lasergun%s"],
-	["Your %s can now launch air strikes!", 				"airstrike%s"],
-	["Your %s is now obliterating the world!", 				"obliterating%s"],
-	["Your %s now includes a UFO to abduct the trees!", 	"ufo%s"],
-	["Your %s now has a black hole!!", 						"blackhole%s"],
+	[loc("Upgrade Mod - " + modname + " - Message"), loc("Upgrade Mod - " + modname + " - Mod")]
+		for modname in ["Handle", "Faster", "Jet"]
 ]
 
 def GAMEPLAY():
@@ -575,7 +579,7 @@ def GAMEPLAY():
 			if p["time"] <= 0:
 				particles.remove(p)
 		# Draw the text
-		text = font.render(f"Wood: {amount_wood}", True, (0, 0, 0))
+		text = font.render(f"{loc('Gameplay - Amount of wood')}: {amount_wood}", True, (0, 0, 0))
 		screen.blit(text, (0, 0))
 		# Flip
 		pygame.display.flip()
