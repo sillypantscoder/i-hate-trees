@@ -3,6 +3,7 @@
 import pygame
 import random
 import sounds
+import json
 
 SHOW_DEBUGS = False
 MOBILE_VERSION = False
@@ -59,7 +60,19 @@ def MENU(headertext, items):
 		c.tick(60)
 
 def MAIN():
-	sounds.menu_start()
+	global SHOW_DEBUGS
+	global background_music
+	global MOBILE_VERSION
+	# Load settings
+	f = open("settings.json", "r")
+	settings = json.load(f)
+	f.close()
+	SHOW_DEBUGS = settings["show_debugs"]
+	MOBILE_VERSION = settings["mobile_version"]
+	background_music = settings["background_music"]
+	if background_music:
+		sounds.menu_start()
+	# Gameplay
 	running = True
 	while running:
 		selected_option = MENU("i hate trees", ["play", "shop", "settings", "save/load"])
@@ -170,6 +183,10 @@ def SETTINGS():
 				updatessha = repo.git.log('--no-decorate', '--pretty=%H', '..origin/main').split("\n")[opt - 1]
 				print(repo.git.show(updatessha))
 				repo.git.reset('--hard', updatessha)
+		# Save settings
+		f = open("settings.json", "w")
+		f.write(json.dumps({"show_debugs": SHOW_DEBUGS, "background_music": background_music, "mobile_version": MOBILE_VERSION}))
+		f.close()
 
 def SAVELOAD():
 	global amount_wood
@@ -187,7 +204,6 @@ def SAVELOAD():
 		elif selected_option == 0:
 			return True
 		elif selected_option == 1:
-			import json
 			obj = {
 				"amount_wood": amount_wood,
 				"max_chainsaw_heat": max_chainsaw_heat,
@@ -203,7 +219,6 @@ def SAVELOAD():
 			f.write(json.dumps(obj))
 			f.close()
 		elif selected_option == 2:
-			import json
 			f = open("save.json", "r")
 			obj = json.loads(f.read())
 			f.close()
@@ -300,7 +315,7 @@ background_music: bool = True
 world: "list[House]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
-amount_wood: int = 0
+amount_wood: int = 10000000000000000000000000
 chainsaw_heat: int = 0
 chainsaw_strength: int = 1
 chainsaw_cooling: int = 0.4
