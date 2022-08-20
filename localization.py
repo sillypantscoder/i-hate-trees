@@ -15,8 +15,12 @@ for lang in range(len(langs)):
 		key = row[0]
 		value = row[lang + 1]
 		if "Upgrade Mod" in key:
-			localization_dict[langs[lang]][key + " - Message"] = value.split("|")[0]
-			localization_dict[langs[lang]][key + " - Mod"] = value.split("|")[1]
+			msg = value.split("|")[0]
+			mod = value.split("|")
+			if len(mod) > 1: mod = mod[1]
+			else: mod = mod[0]
+			localization_dict[langs[lang]][key + " - Message"] = msg
+			localization_dict[langs[lang]][key + " - Mod"] = mod
 		else:
 			localization_dict[langs[lang]][key] = value
 
@@ -38,3 +42,6 @@ def getlanglist():
 
 def get_lang():
 	return lang
+
+if __name__ == "__main__":
+	print(localization_dict)

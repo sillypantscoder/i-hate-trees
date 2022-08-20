@@ -1,7 +1,7 @@
 Home screen - Title,i hate trees,Ég hata tré
 Home screen - Play,play,Spila
 Home screen - Shop,shop,búð
-Home screen - Settings,settings,
+Home screen - Settings,settings,stillingar
 Home screen - Save/load,save/load,vista/hlaða
 Gameplay - Amount of wood,Wood,viður
 Shop - Heat,upgrade heat capacity,bæta hitaþol
@@ -9,14 +9,28 @@ Shop - Power,upgrade chainsaw power,Bæta styrk
 Shop - Cooling,upgrade cooling speed,Bæta kælihraða
 Shop - Range,upgrade chainsaw range,Bæta fjarlægð
 Shop - Upgrade,upgrade your chainsaw,Uppfæra keðjusögina
+Shop - Upgrade Header,upgrade,Gera betri
+Upgrade Mod - Handle,Your %s now has a handle!|%shandle,
+Upgrade Mod - Faster,Your %s is now faster!|faster%s,
+Upgrade Mod - Jet,Your %s now includes a fighter jet!|fighterjet%s,
+Upgrade Mod - Bombs,Your %s now includes bombs!|bomb%s,
+Upgrade Mod - Laser,Your %s also has a laser gun!|lasergun%s,
+Upgrade Mod - Air Strikes,Your %s can now launch air strikes!|airstrike%s,
+Upgrade Mod - Obliterating,Your %s is now obliterating the world!|obliterating%s,
+Upgrade Mod - UFO,Your %s now includes a UFO to abduct the trees!|ufo%s,
+Upgrade Mod - Black Hole,Your %s now has a black hole!!|blackhole%s,
 Menus - Exit,exit,Hætta
 Menus - Cancel,cancel,Hætta við
 Settings - Hitboxes,show colored rectangles,Sýna litaða ferhyrninga
 Settings - Music,background music,bakgrunstónlist
+Settings - Sounds,sounds,hljóð
 Settings - Mobile,mobile version,spjaldtölvu/síma útgáfa
 Settings - Update,update the game,Uppfæra leikinn
+Settings - Language,change language,
 Settings - On,ON,á
 Settings - Off,OFF,af
+Settings - Update Header,update,uppfæra
 Settings - Update Latest Version,(latest),(Nýjasta)
+Settings - Reset Here,Update to:,Uppfæra í
 Files - Save,save,vista
 Files - Load,load,hlaða
