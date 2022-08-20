@@ -62,6 +62,7 @@ def MENU(headertext, items):
 def MAIN():
 	global SHOW_DEBUGS
 	global background_music
+	global sounds_active
 	global MOBILE_VERSION
 	# Load settings
 	f = open("settings.json", "r")
@@ -70,6 +71,7 @@ def MAIN():
 	SHOW_DEBUGS = settings["show_debugs"]
 	MOBILE_VERSION = settings["mobile_version"]
 	background_music = settings["background_music"]
+	sounds_active = settings["sounds_active"]
 	if background_music:
 		sounds.menu_start()
 	# Gameplay
@@ -149,10 +151,11 @@ def SHOP():
 def SETTINGS():
 	global SHOW_DEBUGS
 	global background_music
+	global sounds_active
 	global MOBILE_VERSION
 	running = True
 	while running:
-		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", f"background music {'ON' if background_music else 'OFF'}", f"mobile version {'ON' if MOBILE_VERSION else 'OFF'}", "update the game"])
+		selected_option = MENU("settings", ["exit", f"show colored rectangles {'ON' if SHOW_DEBUGS else 'OFF'}", f"background music {'ON' if background_music else 'OFF'}", f"sounds {'ON' if sounds_active else 'OFF'}", f"mobile version {'ON' if MOBILE_VERSION else 'OFF'}", "update the game"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -166,8 +169,11 @@ def SETTINGS():
 			else:
 				sounds.stop_background()
 		elif selected_option == 3:
-			MOBILE_VERSION = not MOBILE_VERSION
+			sounds_active = not sounds_active
+			sounds.set_active(sounds_active)
 		elif selected_option == 4:
+			MOBILE_VERSION = not MOBILE_VERSION
+		elif selected_option == 5:
 			from git import Repo
 			repo = Repo('.')
 			repo.git.fetch()
@@ -185,7 +191,7 @@ def SETTINGS():
 				repo.git.reset('--hard', updatessha)
 		# Save settings
 		f = open("settings.json", "w")
-		f.write(json.dumps({"show_debugs": SHOW_DEBUGS, "background_music": background_music, "mobile_version": MOBILE_VERSION}))
+		f.write(json.dumps({"show_debugs": SHOW_DEBUGS, "background_music": background_music, "sounds_active": sounds_active, "mobile_version": MOBILE_VERSION}))
 		f.close()
 
 def SAVELOAD():
@@ -311,6 +317,7 @@ class House:
 max_chainsaw_heat: int = 100
 playersize: int = 10
 background_music: bool = True
+sounds_active: bool = True
 
 world: "list[House]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player

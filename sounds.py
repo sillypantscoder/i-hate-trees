@@ -8,19 +8,23 @@ chainsaw_end = mixer.Sound('assets/chainsaw-01-end.wav')
 chainsaw_channel = mixer.find_channel(True)
 
 def start_chainsaw():
-	chainsaw_channel.play(chainsaw, loops=-1)
+	if sounds_active:
+		chainsaw_channel.play(chainsaw, loops=-1)
 
 def stop_chainsaw():
-	chainsaw_channel.stop()
-	chainsaw_channel.play(chainsaw_end)
+	if sounds_active:
+		chainsaw_channel.stop()
+		chainsaw_channel.play(chainsaw_end)
 
 def menu_start():
-	mixer.music.load('assets/9. KIWF+More+Scared+of+You.wav')
-	mixer.music.play(-1)
+	if sounds_active:
+		mixer.music.load('assets/9. KIWF+More+Scared+of+You.wav')
+		mixer.music.play(-1)
 
 def gameplay_start():
-	mixer.music.load('assets/5. black_game_music.wav')
-	mixer.music.play(-1)
+	if sounds_active:
+		mixer.music.load('assets/5. black_game_music.wav')
+		mixer.music.play(-1)
 
 def stop_background():
 	mixer.music.stop()
@@ -41,3 +45,13 @@ def chainsaw_active_tick():
 		stop_chainsaw()
 	chainsaw_previous_status = chainsaw_active_status
 	chainsaw_active_status = False
+
+sounds_active = True
+def set_active(status):
+	global sounds_active
+	sounds_active = status
+	if not sounds_active:
+		chainsaw_channel.stop()
+		stop_background()
+	else:
+		menu_start()
