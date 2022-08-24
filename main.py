@@ -325,12 +325,37 @@ class House:
 				pygame.draw.rect(combined, (0, 255, 0), pygame.Rect(cum_x - (barWidth / 2), 200, barWidth * (tree["treeStrength"] / tree["maxTreeStrength"]), barHeight))
 		return combined
 
+def drawPerson() -> pygame.Surface:
+	person: pygame.Surface = pygame.Surface((100, 200), pygame.SRCALPHA)
+	person.fill((255, 255, 255, 0))
+	# Head
+	pygame.draw.ellipse(person, (0, 0, 0), pygame.Rect(0, 0, 100, 75), 5)
+	pygame.draw.line(person, (0, 0, 0), (25, 10), (35, 40), 5) # Left eye
+	pygame.draw.line(person, (0, 0, 0), (75, 10), (65, 40), 5) # Right eye
+	pygame.draw.line(person, (0, 0, 0), (30, 60), (50, 50), 5) # Left mouth
+	pygame.draw.line(person, (0, 0, 0), (70, 60), (50, 50), 5) # Right mouth
+	# Body
+	pygame.draw.line(person, (0, 0, 0), (50, 75), (50, 150), 5) # Body
+	pygame.draw.line(person, (0, 0, 0), (0, 112), (100, 112), 5) # Arm
+	pygame.draw.line(person, (0, 0, 0), (50, 150), (0, 200), 5) # Left leg
+	pygame.draw.line(person, (0, 0, 0), (50, 150), (100, 200), 5) # Right leg
+	return person
+
+class Person:
+	def __init__(self, x):
+		self.x = x
+		self.y = 200 - playersize
+		self.v = [0, 0]
+		self.moved = False
+		self.img = drawPerson()
+
 max_chainsaw_heat: int = 100
 playersize: int = 10
 background_music: bool = True
 sounds_active: bool = True
 
 world: "list[House]" = []
+people: "list[Person]" = [Person(200)]
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
 amount_wood: int = 10000000000000000000000000
@@ -511,6 +536,59 @@ def GAMEPLAY():
 								"img": wood,
 								"gravity": 0
 							})
+					# People
+					for p in people:
+						hitbox = pygame.Rect(p.x, screensize[1] - p.y, p.img.get_width(), p.img.get_height())
+						if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), hitbox.move(scroll, 0), 1) # Person hitbox
+						if hitbox.colliderect(hit):
+							# Which side of the tree did we hit?
+							if hitbox.bottom - playersize < hit.top:
+								# Top
+								p.v[1] = 0
+								p.y = (screensize[1] - hit.top) + p.img.get_height()
+								# Move towards player
+								if not p.moved and p.x < playerpos[0] + (p.img.get_width() / -2):
+									# Move right
+									p.v[0] += 0.4
+									p.moved = True
+								if not p.moved and p.x > playerpos[0] + (p.img.get_width() / -2):
+									# Move left
+									p.v[0] -= 0.4
+									p.moved = True
+							elif hitbox.centerx < hit.left:
+								# Hit left of tree
+								p.v[0] = 0
+								p.x = hit.left - p.img.get_width()
+								# Move towards player
+								if not p.moved and p.x > playerpos[0] + (p.img.get_width() / -2):
+									# Move left
+									p.v[0] -= 0.4
+									p.moved = True
+								if not p.moved and p.x < playerpos[0] + (p.img.get_width() / -2):
+									# Jump if we need to move right
+									p.v[1] += 0.4
+									p.moved = True
+							elif hitbox.centerx > hit.right:
+								# Hit right of tree
+								p.v[0] = 0
+								p.x = hit.right
+								# Move towards player
+								if not p.moved and p.x > playerpos[0]:
+									# Jump if we need to move left
+									p.v[1] += 0.4
+									p.moved = True
+								if not p.moved and p.x < playerpos[0]:
+									# Move right
+									p.v[0] += 0.4
+									p.moved = True
+						else:
+							# Move towards player
+							if not p.moved and p.x < playerpos[0] + (p.img.get_width() / -2):
+								p.v[0] += 0.4
+								p.moved = True
+							if not p.moved and p.x > playerpos[0] + (p.img.get_width() / -2):
+								p.v[0] -= 0.4
+								p.moved = True
 					tree_x += 80
 			cum_x += h.width
 		# Adding new houses
@@ -578,6 +656,17 @@ def GAMEPLAY():
 			screen.blit(p["img"], (p["pos"][0] + scroll, screensize[1] - p["pos"][1]))
 			if p["time"] <= 0:
 				particles.remove(p)
+		# Tick the people
+		for p in people:
+			screen.blit(p.img, (p.x + scroll, screensize[1] - p.y)) # Draw
+			p.x += p.v[0]
+			p.y += p.v[1]
+			p.v[0] *= 0.7
+			p.v[1] -= 0.1
+			if p.y < p.img.get_height(): # Collision with floor
+				p.y = p.img.get_height()
+				p.v[1] = 0
+			p.moved = False
 		# Draw the text
 		text = font.render(f"{loc('Gameplay - Amount of wood')}: {amount_wood}", True, (0, 0, 0))
 		screen.blit(text, (0, 0))
