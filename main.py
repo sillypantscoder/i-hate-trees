@@ -258,7 +258,7 @@ def SAVELOAD():
 						world[i].trees[j]["hitbox"] = stump["hitbox"]
 						world[i].trees[j]["img"] = stump["img"]
 
-def drawHouse() -> pygame.Surface:
+def drawHouse(personStatus) -> pygame.Surface:
 	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
 	house.fill((255, 255, 255, 0))
 	# Base
@@ -267,13 +267,23 @@ def drawHouse() -> pygame.Surface:
 	pygame.draw.polygon(house, (200, 200, 255), ((50, 100), (150, 0), (250, 100)))
 	pygame.draw.polygon(house, (50, 0, 10), ((50, 100), (150, 0), (250, 100)), 10)
 	# Door
-	pygame.draw.rect(house, (100, 100, 100), pygame.Rect(85, 200, 50, 90))
-	pygame.draw.circle(house, (0, 0, 0), (100, 245), 5)
+	if personStatus < 61:
+		pygame.draw.rect(house, (100, 100, 100), pygame.Rect(85, 200, 50, 90))
+		pygame.draw.circle(house, (0, 0, 0), (100, 245), 5)
+	else:
+		pygame.draw.rect(house, (255, 255, 255), pygame.Rect(85, 200, 50, 90))
+		pygame.draw.rect(house, (100, 100, 100), pygame.Rect(125, 200, 10, 90))
 	# Window
-	pygame.draw.rect(house, (150, 150, 100), pygame.Rect(160, 135, 60, 60))
-	pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60), 10)
-	pygame.draw.line(house, (50, 0, 10), (190, 135), (190, 195), 10)
-	pygame.draw.line(house, (50, 0, 10), (160, 165), (220, 165), 10)
+	if personStatus < 2:
+		pygame.draw.rect(house, (150, 150, 100) if personStatus == 1 else (50, 50, 50), pygame.Rect(160, 135, 60, 60))
+		pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60), 10)
+		pygame.draw.line(house, (50, 0, 10), (190, 135), (190, 195), 10)
+		pygame.draw.line(house, (50, 0, 10), (160, 165), (220, 165), 10)
+	elif personStatus <= 15:
+		pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60))
+	else:
+		pygame.draw.rect(house, (150, 150, 100), pygame.Rect(160, 135, 60, 60))
+		pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60), 10)
 	return house
 
 def drawTree(x) -> pygame.Surface:
@@ -303,14 +313,26 @@ def drawTreeStump(oldTreeWidth) -> pygame.Surface:
 
 class House:
 	def __init__(self, x):
-		self.house = drawHouse()
 		self.trees = [drawTree(x) for i in range(random.choices([1, 2, 3], weights=[4, 4, 1], k=1)[0])]
 		self.treeoffset = random.randint(140, 200)
+		self.personStatus = random.choices([0, 1], weights=[1, 1], k=1)[0]
+		# Person status:
+		# 	0: no person
+		# 	1: person is waiting
+		# 	2-15: window breaking  ---\
+		# 	16-25: window broken      |- person coming out animation
+		# 	26-60: waiting  ----------/
+		# 	61: person came out
+		self.visited = False # Whether the player has gone past the door.
+							 # This is to ensure that a person doesn't come
+							 # out of the house if the player hasn't
+							 # interacted with the house yet.
 		self.width = self.draw().get_width()
 	def draw(self) -> pygame.Surface:
-		house = pygame.Surface(self.house.get_size(), pygame.SRCALPHA)
-		house.blit(self.house, (0, 0))
-		house.set_alpha(130)
+		solidHouse = drawHouse(self.personStatus)
+		house = pygame.Surface(solidHouse.get_size(), pygame.SRCALPHA)
+		house.blit(solidHouse, (0, 0))
+		house.set_alpha(130 if self.visited else 70)
 		combined = pygame.Surface((self.treeoffset + (len(self.trees) * 80) + 80, 300), pygame.SRCALPHA)
 		combined.blit(house, (0, 0))
 		cum_x = self.treeoffset + 0
@@ -346,8 +368,18 @@ class Person:
 		self.x = x
 		self.y = 200 - playersize
 		self.v = [0, 0]
-		self.moved = False
 		self.img = drawPerson()
+		self.health = 60 * 5
+		self.canmoveleft = True
+		self.canmoveright = True
+	def draw(self) -> pygame.Surface:
+		r = self.img.copy()
+		# Health bar
+		barWidth = 60
+		barHeight = 10
+		pygame.draw.rect(r, (255, 0, 0), pygame.Rect((r.get_width() / 2) - (barWidth / 2), 10, barWidth, barHeight))
+		pygame.draw.rect(r, (0, 255, 0), pygame.Rect((r.get_width() / 2) - (barWidth / 2), 10, barWidth * (self.health / (60 * 5)), barHeight))
+		return r
 
 max_chainsaw_heat: int = 100
 playersize: int = 10
@@ -433,6 +465,22 @@ def GAMEPLAY():
 			if cum_x >= -h.width and cum_x <= screensize[0]:
 				s = h.draw()
 				screen.blit(s, (cum_x, screensize[1] - s.get_height()))
+				# Person status
+				doorx = cum_x + (h.width / 3) + (-scroll)
+				if h.personStatus > 1 and h.personStatus <= 61:
+					h.personStatus += 1
+					if h.personStatus == 61:
+						people.append(Person(doorx))
+				elif h.personStatus == 1:
+					if h.visited and random.randint(0, 60 * 30) == 1:
+						h.personStatus = 2
+				if keys[pygame.K_SPACE] or (MOBILE_VERSION and mousedown and mousepos[1] > screensize[1] * (2 / 3)):
+					# Chainsaw making noise!
+					if h.visited and h.personStatus == 1 and random.randint(0, 60) == 1:
+						h.personStatus = 2
+				# Check if the player has visited this house
+				if playerpos[0] > doorx:
+					h.visited = True
 				# Check for collisions
 				tree_x = cum_x + h.treeoffset
 				for t in h.trees:
@@ -546,49 +594,16 @@ def GAMEPLAY():
 								# Top
 								p.v[1] = 0
 								p.y = (screensize[1] - hit.top) + p.img.get_height()
-								# Move towards player
-								if not p.moved and p.x < playerpos[0] + (p.img.get_width() / -2):
-									# Move right
-									p.v[0] += 0.4
-									p.moved = True
-								if not p.moved and p.x > playerpos[0] + (p.img.get_width() / -2):
-									# Move left
-									p.v[0] -= 0.4
-									p.moved = True
 							elif hitbox.centerx < hit.left:
 								# Hit left of tree
 								p.v[0] = 0
 								p.x = hit.left - p.img.get_width()
-								# Move towards player
-								if not p.moved and p.x > playerpos[0] + (p.img.get_width() / -2):
-									# Move left
-									p.v[0] -= 0.4
-									p.moved = True
-								if not p.moved and p.x < playerpos[0] + (p.img.get_width() / -2):
-									# Jump if we need to move right
-									p.v[1] += 0.4
-									p.moved = True
+								p.canmoveright = False
 							elif hitbox.centerx > hit.right:
 								# Hit right of tree
 								p.v[0] = 0
 								p.x = hit.right
-								# Move towards player
-								if not p.moved and p.x > playerpos[0]:
-									# Jump if we need to move left
-									p.v[1] += 0.4
-									p.moved = True
-								if not p.moved and p.x < playerpos[0]:
-									# Move right
-									p.v[0] += 0.4
-									p.moved = True
-						else:
-							# Move towards player
-							if not p.moved and p.x < playerpos[0] + (p.img.get_width() / -2):
-								p.v[0] += 0.4
-								p.moved = True
-							if not p.moved and p.x > playerpos[0] + (p.img.get_width() / -2):
-								p.v[0] -= 0.4
-								p.moved = True
+								p.canmoveleft = False
 					tree_x += 80
 			cum_x += h.width
 		# Adding new houses
@@ -658,7 +673,7 @@ def GAMEPLAY():
 				particles.remove(p)
 		# Tick the people
 		for p in people:
-			screen.blit(p.img, (p.x + scroll, screensize[1] - p.y)) # Draw
+			screen.blit(p.draw(), (p.x + scroll, screensize[1] - p.y)) # Draw
 			p.x += p.v[0]
 			p.y += p.v[1]
 			p.v[0] *= 0.7
@@ -666,7 +681,26 @@ def GAMEPLAY():
 			if p.y < p.img.get_height(): # Collision with floor
 				p.y = p.img.get_height()
 				p.v[1] = 0
-			p.moved = False
+			p.health -= 1
+			if p.health <= 0:
+				people.remove(p)
+			# Move towards player
+			if p.x < playerpos[0] + (p.img.get_width() / -2):
+				if p.canmoveright:
+					# Move right
+					p.v[0] += 0.4
+				else:
+					# Jump
+					p.v[1] += 0.65
+			if p.x > playerpos[0] + (p.img.get_width() / -2):
+				if p.canmoveleft:
+					# Move left
+					p.v[0] -= 0.4
+				else:
+					# Jump
+					p.v[1] += 0.65
+			p.canmoveleft = True
+			p.canmoveright = True
 		# Draw the text
 		text = font.render(f"{loc('Gameplay - Amount of wood')}: {amount_wood}", True, (0, 0, 0))
 		screen.blit(text, (0, 0))
