@@ -387,7 +387,7 @@ background_music: bool = True
 sounds_active: bool = True
 
 world: "list[House]" = []
-people: "list[Person]" = [Person(200)]
+people: "list[Person]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
 amount_wood: int = 10000000000000000000000000
@@ -587,6 +587,9 @@ def GAMEPLAY():
 					# People
 					for p in people:
 						hitbox = pygame.Rect(p.x, screensize[1] - p.y, p.img.get_width(), p.img.get_height())
+						if hitbox.move(scroll, 0).colliderect(playerrect):
+							MENU("You died!", ["Back to game"])
+							p.health -= 25
 						if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), hitbox.move(scroll, 0), 1) # Person hitbox
 						if hitbox.colliderect(hit):
 							# Which side of the tree did we hit?
@@ -691,14 +694,14 @@ def GAMEPLAY():
 					p.v[0] += 0.4
 				else:
 					# Jump
-					p.v[1] += 0.65
+					p.v[1] += 0.55
 			if p.x > playerpos[0] + (p.img.get_width() / -2):
 				if p.canmoveleft:
 					# Move left
 					p.v[0] -= 0.4
 				else:
 					# Jump
-					p.v[1] += 0.65
+					p.v[1] += 0.55
 			p.canmoveleft = True
 			p.canmoveright = True
 		# Draw the text
