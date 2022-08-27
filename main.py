@@ -390,7 +390,7 @@ world: "list[House]" = []
 people: "list[Person]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
-amount_wood: int = 10000000000000000000000000
+amount_wood: int = 0
 chainsaw_heat: int = 0
 chainsaw_strength: int = 1
 chainsaw_cooling: int = 0.4
@@ -409,6 +409,7 @@ def GAMEPLAY():
 	global playerv
 	global amount_wood
 	global chainsaw_heat
+	global playerrect
 
 	particles = []
 	chainsaw0 = pygame.image.load("assets/chainsaw_0.png")
