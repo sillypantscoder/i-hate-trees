@@ -4,6 +4,8 @@ Home screen - Shop,shop,búð
 Home screen - Settings,settings,stillingar
 Home screen - Save/load,save/load,vista/hlaða
 Gameplay - Amount of wood,Wood,viður
+Gameplay - Death,You died!,
+Gameplay - Back to game,Back to game,
 Shop - Heat,upgrade heat capacity,bæta hitaþol
 Shop - Power,upgrade chainsaw power,Bæta styrk
 Shop - Cooling,upgrade cooling speed,Bæta kælihraða
@@ -26,7 +28,7 @@ Settings - Music,background music,bakgrunstónlist
 Settings - Sounds,sounds,hljóð
 Settings - Mobile,mobile version,spjaldtölvu/síma útgáfa
 Settings - Update,update the game,Uppfæra leikinn
-Settings - Language,change language,
+Settings - Language,change language,Breyta tungumáli
 Settings - On,ON,á
 Settings - Off,OFF,af
 Settings - Update Header,update,uppfæra

@@ -43,14 +43,18 @@ def MENU(headertext, items):
 		# BUTTONS
 		btnindex = 0
 		for itemtext in items:
-			btn_text = menufont.render(itemtext, 1, (0, 0, 0)) # Render the text.
+			if itemtext.startswith(">"):
+				btn_text = menufont.render(itemtext[1:], 1, (0, 0, 0)) # Render the stripped text.
+			else:
+				btn_text = menufont.render(itemtext, 1, (0, 0, 0)) # Render the text.
 			buttonPadding = 10 # Amount of padding around the text.
 			buttonY = last_height + buttonPadding + 40 # Top of button: bottom of last item + padding + extra padding.
 			buttonRect = pygame.Rect(buttonPadding, buttonY, btn_text.get_height(), btn_text.get_height()) # Dimensions of the button.
-			pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.5) # === Draw the button. ===
+			if itemtext.startswith(">"):
+				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.5) # === Draw the button. ===
 			screen.blit(btn_text, (buttonRect.right + buttonPadding, buttonY)) # Draw the text.
 			textRect = pygame.Rect(0, buttonY, screensize[0], btn_text.get_height()) # Dimensions of the text.
-			if textRect.collidepoint(mousepos): # If the mouse is over the text...
+			if textRect.collidepoint(mousepos) and itemtext.startswith(">"): # If the mouse is over the text...
 				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the hovered button.
 				if clicked: # If the text is clicked...
 					return btnindex # Return the index of the clicked button.
@@ -79,7 +83,7 @@ def MAIN():
 	# Gameplay
 	running = True
 	while running:
-		selected_option = MENU(loc("Home screen - Title"), [loc("Home screen - Play"), loc("Home screen - Shop"), loc("Home screen - Settings"), loc("Home screen - Save/load")])
+		selected_option = MENU(loc("Home screen - Title"), [">" + loc("Home screen - Play"), ">" + loc("Home screen - Shop"), ">" + loc("Home screen - Settings"), ">" + loc("Home screen - Save/load")])
 		if selected_option == -1:
 			running = False
 		elif selected_option == 0:
@@ -110,12 +114,12 @@ def SHOP():
 	global chainsaw_upgrade_status
 	running = True
 	while running:
-		selected_option = MENU(loc("Home screen - Shop"), [loc("Menus - Exit"),
-			f"{loc('Shop - Heat')} ({upgrade_prices['heat_capacity']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
-			f"{loc('Shop - Power')} ({upgrade_prices['chainsaw_power']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
-			f"{loc('Shop - Cooling')} ({upgrade_prices['cooling_speed']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
-			f"{loc('Shop - Range')} ({upgrade_prices['chainsaw_range']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
-			f"{loc('Shop - Upgrade')} ({upgrade_prices['chainsaw_upgrades']}/{amount_wood} {loc('Gameplay - Amount of wood')})"])
+		selected_option = MENU(loc("Home screen - Shop"), [">" + loc("Menus - Exit"),
+			f">{loc('Shop - Heat')} ({upgrade_prices['heat_capacity']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f">{loc('Shop - Power')} ({upgrade_prices['chainsaw_power']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f">{loc('Shop - Cooling')} ({upgrade_prices['cooling_speed']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f">{loc('Shop - Range')} ({upgrade_prices['chainsaw_range']}/{amount_wood} {loc('Gameplay - Amount of wood')})",
+			f">{loc('Shop - Upgrade')} ({upgrade_prices['chainsaw_upgrades']}/{amount_wood} {loc('Gameplay - Amount of wood')})"])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -147,7 +151,7 @@ def SHOP():
 				chainsawname = "chainsaw"
 				for i in range(chainsaw_upgrade_status):
 					chainsawname = chainsaw_upgrade_mod[i][1].replace("%s", chainsawname)
-				MENU(loc("Shop - Upgrade Header"), [chainsaw_upgrade_mod[chainsaw_upgrade_status][0].replace("%s", chainsawname)])
+				MENU(loc("Shop - Upgrade Header"), [chainsaw_upgrade_mod[chainsaw_upgrade_status][0].replace("%s", chainsawname), ">Exit"])
 				chainsaw_upgrade_status += 1
 
 def SETTINGS():
@@ -159,7 +163,14 @@ def SETTINGS():
 	while running:
 		on = loc("Settings - On")
 		off = loc("Settings - Off")
-		selected_option = MENU(loc("Home screen - Settings"), [loc("Menus - Exit"), f"{loc('Settings - Hitboxes')} {on if SHOW_DEBUGS else off}", f"{loc('Settings - Music')} {on if background_music else off}", f"{loc('Settings - Sounds')} {on if sounds_active else off}", f"{loc('Settings - Mobile')} {on if MOBILE_VERSION else off}", loc("Settings - Update"), loc("Settings - Language")])
+		selected_option = MENU(loc("Home screen - Settings"),
+			[">" + loc("Menus - Exit"),
+			f">{loc('Settings - Hitboxes')} {on if SHOW_DEBUGS else off}",
+			f">{loc('Settings - Music')} {on if background_music else off}",
+			f">{loc('Settings - Sounds')} {on if sounds_active else off}",
+			f">{loc('Settings - Mobile')} {on if MOBILE_VERSION else off}",
+			">" + loc("Settings - Update"),
+			">" + loc("Settings - Language")])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -184,9 +195,10 @@ def SETTINGS():
 			updates = repo.git.log('--no-decorate', '--pretty=LOCRESETHERE %s%n\t%b', '..origin/main')[:-2].replace("LOCRESETHERE", loc("Settings - Reset Here"))
 			updates = [x.split("\n\t\n") for x in updates.split("\n\n")]
 			# and combine into one list
-			updates = [x for y in updates for x in y]
+			updates = [">" + x for y in updates for x in y]
 			# Now we have a list of updates; we can display them in a menu
-			opt = MENU(loc("Settings - Update Header"), [loc("Menus - Cancel"), *[(u.replace('\n\t', ' -- ') + " " + loc("Settings - Update Latest Version") if i == 0 else u.replace('\n\t', ' -- ')) for i, u in enumerate(updates)]])
+			opt = MENU(loc("Settings - Update Header"), [">" + loc("Menus - Cancel"),
+				*[(u.replace('\n\t', ' -- ') + " " + loc("Settings - Update Latest Version") if i == 0 else u.replace('\n\t', ' -- ')) for i, u in enumerate(updates)]])
 			if opt == -1:
 				return False
 			elif opt > 0:
@@ -194,7 +206,7 @@ def SETTINGS():
 				print(repo.git.show(updatessha))
 				repo.git.reset('--hard', updatessha)
 		elif selected_option == 6:
-			langs = getlanglist()
+			langs = [">" + x for x in getlanglist()]
 			option = MENU(loc("Settings - Language"), langs)
 			if option == -1:
 				return False
@@ -215,7 +227,10 @@ def SAVELOAD():
 	global playerpos
 	running = True
 	while running:
-		selected_option = MENU(loc("Home screen - Save/load"), [loc("Menus - Exit"), loc("Files - Save"), loc("Files - Load")])
+		selected_option = MENU(loc("Home screen - Save/load"),
+			[">" + loc("Menus - Exit"),
+			">" + loc("Files - Save"),
+			">" + loc("Files - Load")])
 		if selected_option == -1:
 			return False
 		elif selected_option == 0:
@@ -398,7 +413,7 @@ chainsaw_range: int = 50
 chainsaw_upgrade_status: int = 0
 chainsaw_upgrade_mod: "list[str]" = [
 	[loc("Upgrade Mod - " + modname + " - Message"), loc("Upgrade Mod - " + modname + " - Mod")]
-		for modname in ["Handle", "Faster", "Jet"]
+		for modname in ["Handle", "Faster", "Jet", "Bombs", "Laser", "Air Strikes", "Obliterating", "UFO", "Black Hole"]
 ]
 
 def GAMEPLAY():
@@ -589,7 +604,7 @@ def GAMEPLAY():
 					for p in people:
 						hitbox = pygame.Rect(p.x, screensize[1] - p.y, p.img.get_width(), p.img.get_height())
 						if hitbox.move(scroll, 0).colliderect(playerrect):
-							MENU("You died!", ["Back to game"])
+							MENU(loc("Gameplay - Death"), [">" + loc("Gameplay - Back to game")])
 							p.health -= 25
 						if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), hitbox.move(scroll, 0), 1) # Person hitbox
 						if hitbox.colliderect(hit):
