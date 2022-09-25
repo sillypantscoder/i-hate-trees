@@ -15,11 +15,13 @@ screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 pygame.font.init()
 font = pygame.font.SysFont("monospace", 20)
 
-def MENU(headertext, items):
+def MENU(headertext, items, enableeasteregg=False):
 	global screen
 	global screensize
 
 	menufont = pygame.font.SysFont("monospace", 35)
+	eastereggprogress = 0
+	eastereggtext = "super secret settings"
 
 	c = pygame.time.Clock()
 	running = True
@@ -34,6 +36,18 @@ def MENU(headertext, items):
 				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 			elif event.type == pygame.MOUSEBUTTONDOWN:
 				clicked = True
+			elif event.type == pygame.KEYDOWN:
+				# Easter egg
+				if enableeasteregg:
+					if event.unicode == eastereggtext[eastereggprogress]:
+						eastereggprogress += 1
+						if eastereggprogress == len(eastereggtext):
+							# wheeee
+							MENU(loc("Easter Egg - Title"), [loc("Easter Egg - Description"), ">" + loc("Easter Egg - Button")])
+							global amount_wood
+							amount_wood += 2000000
+					else:
+						eastereggprogress = 0
 		screen.fill((255, 255, 255))
 		# HEADER
 		header = menufont.render(headertext, 1, (0, 0, 0))
@@ -199,7 +213,7 @@ def SETTINGS():
 			updates = [">" + x for y in updates for x in y]
 			# Now we have a list of updates; we can display them in a menu
 			opt = MENU(loc("Settings - Update Header"), [">" + loc("Menus - Cancel"),
-				*[(u.replace('\n\t', ' -- ') + " " + loc("Settings - Update Latest Version") if i == 0 else u.replace('\n\t', ' -- ')) for i, u in enumerate(updates)]])
+				*[(u.replace('\n\t', ' -- ') + " " + loc("Settings - Update Latest Version") if i == 0 else u.replace('\n\t', ' -- ')) for i, u in enumerate(updates)]], enableeasteregg=True)
 			if opt == -1:
 				return False
 			elif opt > 0:
