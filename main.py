@@ -77,6 +77,7 @@ def MAIN():
 	MOBILE_VERSION = settings["mobile_version"]
 	background_music = settings["background_music"]
 	sounds_active = settings["sounds_active"]
+	sounds.set_active(sounds_active)
 	set_lang(settings["lang"])
 	if background_music:
 		sounds.menu_start()
@@ -601,11 +602,14 @@ def GAMEPLAY():
 								"gravity": 0
 							})
 					# People
-					for p in people:
+					for p in [*people]:
 						hitbox = pygame.Rect(p.x, screensize[1] - p.y, p.img.get_width(), p.img.get_height())
 						if hitbox.move(scroll, 0).colliderect(playerrect):
 							MENU(loc("Gameplay - Death"), [">" + loc("Gameplay - Back to game")])
-							p.health -= 25
+							people.remove(p)
+							playerpos[0] += random.randint(140, 210) * random.choice([-1, 1])
+							playerpos[1] += random.randint(60, 150)
+							continue;
 						if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), hitbox.move(scroll, 0), 1) # Person hitbox
 						if hitbox.colliderect(hit):
 							# Which side of the tree did we hit?
