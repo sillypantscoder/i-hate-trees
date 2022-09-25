@@ -1,0 +1,20 @@
+[
+	{
+		"mod": "Your %s now has a handle!",
+		"name": "%shandle",
+		"instant": {"type": "range", "amount": 10},
+		"random": ""
+	},
+	{
+		"mod": "Your %s is now faster!",
+		"name": "faster%s",
+		"instant": {"type": "power", "amount": 1},
+		"random": ""
+	},
+	{
+		"mod": "Your %s now includes a fighter jet!",
+		"name": "fighterjet%s",
+		"instant": {"type": "none"},
+		"random": "obliterate"
+	}
+]

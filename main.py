@@ -46,6 +46,7 @@ def MENU(headertext, items, enableeasteregg=False):
 							MENU(loc("Easter Egg - Title"), [loc("Easter Egg - Description"), ">" + loc("Easter Egg - Button")])
 							global amount_wood
 							amount_wood += 2000000
+							eastereggprogress = 0
 					else:
 						eastereggprogress = 0
 		screen.fill((255, 255, 255))
@@ -165,9 +166,19 @@ def SHOP():
 				upgrade_prices["chainsaw_upgrades"] = round(upgrade_prices["chainsaw_upgrades"] * 1.1)
 				chainsawname = "chainsaw"
 				for i in range(chainsaw_upgrade_status):
-					chainsawname = chainsaw_upgrade_mod[i][1].replace("%s", chainsawname)
-				MENU(loc("Shop - Upgrade Header"), [chainsaw_upgrade_mod[chainsaw_upgrade_status][0].replace("%s", chainsawname), ">Exit"])
+					chainsawname = chainsaw_upgrade_mod[i]["name"].replace("%s", chainsawname)
+				MENU(loc("Shop - Upgrade Header"), [chainsaw_upgrade_mod[chainsaw_upgrade_status]["mod"].replace("%s", chainsawname), ">Exit"])
 				chainsaw_upgrade_status += 1
+				# Apply instant effects
+				effect = chainsaw_upgrade_mod[chainsaw_upgrade_status - 1]["instant"]
+				if effect["type"] == "heat":
+					max_chainsaw_heat += effect["amount"]
+				elif effect["type"] == "power":
+					chainsaw_strength += effect["amount"]
+				elif effect["type"] == "cooling":
+					chainsaw_cooling += effect["amount"]
+				elif effect["type"] == "range":
+					chainsaw_range += effect["amount"]
 
 def SETTINGS():
 	global SHOW_DEBUGS
@@ -316,7 +327,7 @@ def drawHouse(personStatus) -> pygame.Surface:
 		pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60), 10)
 	return house
 
-def drawTree(x) -> pygame.Surface:
+def drawTree(x) -> dict:
 	tree: pygame.Surface = pygame.Surface((200, 200), pygame.SRCALPHA)
 	tree.fill((255, 255, 255, 0))
 	treeX = 50
@@ -426,10 +437,9 @@ chainsaw_strength: int = 1
 chainsaw_cooling: int = 0.4
 chainsaw_range: int = 50
 chainsaw_upgrade_status: int = 0
-chainsaw_upgrade_mod: "list[str]" = [
-	[loc("Upgrade Mod - " + modname + " - Message"), loc("Upgrade Mod - " + modname + " - Mod")]
-		for modname in ["Handle", "Faster", "Jet", "Bombs", "Laser", "Air Strikes", "Obliterating", "UFO", "Black Hole"]
-]
+f = open("upgrades.json", "r")
+chainsaw_upgrade_mod: "list[dict]" = json.loads(f.read())
+f.close()
 
 def GAMEPLAY():
 	global screen
@@ -512,6 +522,15 @@ def GAMEPLAY():
 				# Check if the player has visited this house
 				if playerpos[0] > doorx:
 					h.visited = True
+				# Check chainsaw mod upgrades
+				if h.visited:
+					for i in range(chainsaw_upgrade_status):
+						effect = chainsaw_upgrade_mod[i]["random"]
+						for t in h.trees:
+							if random.random() < 0.0005:
+								# Do the effect
+								if effect == "obliterate":
+									t["treeStrength"] = 0
 				# Check for collisions
 				tree_x = cum_x + h.treeoffset
 				for t in h.trees:
@@ -548,34 +567,6 @@ def GAMEPLAY():
 							screen.blit(chainsaw0 if chstatus else chainsaw1, (playerpos[0] - (chainsaw_range / 2) + scroll, (screensize[1] - playerpos[1]) - (chainsaw_range / 2)))
 							if t["treeStrength"] > 0 and hit.colliderect(chainsaw):
 								t["treeStrength"] -= chainsaw_strength
-								if t["treeStrength"] <= 0:
-									# Cut down the tree!
-									# Convert to stump
-									stump = drawTreeStump(t["treeWidth"])
-									t["hitbox"] = stump["hitbox"]
-									t["img"] = stump["img"]
-									# Get wood
-									amount_wood = round(amount_wood + t["maxTreeStrength"])
-									# Add lots of wood particles
-									for i in range(30):
-										if random.random() < 1:
-											woodsize = random.randint(1, 20)
-											wood = pygame.Surface((woodsize, woodsize))
-											wood.fill(random.choice([
-												(30, 15, 5),
-												(100, 50, 0),
-												(50, 0, 10)
-											]))
-											particles.append({
-												"pos": [
-													random.randint(hit.left, hit.right),
-													random.randint(hit.top, hit.bottom) + (-(screensize[1] - t["img"].get_height())) + (-hit.height)
-												],
-												"v": [random.randint(-11, 11) / 10, random.randint(7, 22) / 10],
-												"time": random.randint(35, 120),
-												"img": wood,
-												"gravity": 0.1
-											})
 								# Add wood particle
 								if random.random() < 0.25:
 									woodsize = random.randint(1, 20)
@@ -615,6 +606,36 @@ def GAMEPLAY():
 								"img": wood,
 								"gravity": 0
 							})
+					# Broken check
+					if t["treeStrength"] <= 0 and t["maxTreeStrength"] >= 0:
+						# Cut down the tree!
+						# Convert to stump
+						stump = drawTreeStump(t["treeWidth"])
+						t["hitbox"] = stump["hitbox"]
+						t["img"] = stump["img"]
+						# Get wood
+						amount_wood = round(amount_wood + t["maxTreeStrength"])
+						t["maxTreeStrength"] = -1
+						# Add lots of wood particles
+						for i in range(30):
+							if random.random() < 1:
+								woodsize = random.randint(1, 20)
+								wood = pygame.Surface((woodsize, woodsize))
+								wood.fill(random.choice([
+									(30, 15, 5),
+									(100, 50, 0),
+									(50, 0, 10)
+								]))
+								particles.append({
+									"pos": [
+										random.randint(hit.left, hit.right),
+										random.randint(hit.top, hit.bottom) + (-(screensize[1] - t["img"].get_height())) + (-hit.height)
+									],
+									"v": [random.randint(-11, 11) / 10, random.randint(7, 22) / 10],
+									"time": random.randint(35, 120),
+									"img": wood,
+									"gravity": 0.1
+								})
 					# People
 					for p in [*people]:
 						hitbox = pygame.Rect(p.x, screensize[1] - p.y, p.img.get_width(), p.img.get_height())
