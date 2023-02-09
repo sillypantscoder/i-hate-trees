@@ -15,6 +15,42 @@
 		"mod": "Your %s now includes a fighter jet!",
 		"name": "fighterjet%s",
 		"instant": {"type": "none"},
-		"random": "obliterate"
+		"random": "destroy"
+	},
+	{
+		"mod": "Your %s now includes bombs!",
+		"name": "bomb%s",
+		"instant": {"type": "none"},
+		"random": "destroy"
+	},
+	{
+		"mod": "Your %s also has a laser gun!",
+		"name": "lasergun%s",
+		"instant": {"type": "cooling", "amount": -0.4},
+		"random": "destroy"
+	},
+	{
+		"mod": "Your %s can now launch air strikes!",
+		"name": "airstrike%s",
+		"instant": {"type": "cooling", "amount": -0.4},
+		"random": "destroy"
+	},
+	{
+		"mod": "Your %s is now obliterating the world!",
+		"name": "obliterating%s",
+		"instant": {"type": "none"},
+		"random": "destroy"
+	},
+	{
+		"mod": "Your %s now includes a UFO to abduct the trees!",
+		"name": "ufo%s",
+		"instant": {"type": "range", "amount": 20},
+		"random": "remove"
+	},
+	{
+		"mod": "Your %s now has a black hole!!",
+		"name": "blackhole%s",
+		"instant": {"type": "none"},
+		"random": "remove"
 	}
 ]

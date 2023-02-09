@@ -162,23 +162,28 @@ def SHOP():
 				upgrade_prices["chainsaw_range"] = round(upgrade_prices["chainsaw_range"] * 1.1)
 		elif selected_option == 5:
 			if amount_wood >= upgrade_prices["chainsaw_upgrades"]:
-				amount_wood -= upgrade_prices["chainsaw_upgrades"]
-				upgrade_prices["chainsaw_upgrades"] = round(upgrade_prices["chainsaw_upgrades"] * 1.1)
 				chainsawname = "chainsaw"
 				for i in range(chainsaw_upgrade_status):
 					chainsawname = chainsaw_upgrade_mod[i]["name"].replace("%s", chainsawname)
-				MENU(loc("Shop - Upgrade Header"), [chainsaw_upgrade_mod[chainsaw_upgrade_status]["mod"].replace("%s", chainsawname), ">Exit"])
-				chainsaw_upgrade_status += 1
-				# Apply instant effects
-				effect = chainsaw_upgrade_mod[chainsaw_upgrade_status - 1]["instant"]
-				if effect["type"] == "heat":
-					max_chainsaw_heat += effect["amount"]
-				elif effect["type"] == "power":
-					chainsaw_strength += effect["amount"]
-				elif effect["type"] == "cooling":
-					chainsaw_cooling += effect["amount"]
-				elif effect["type"] == "range":
-					chainsaw_range += effect["amount"]
+				if chainsaw_upgrade_status == len(chainsaw_upgrade_mod):
+					MENU(loc("Shop - Upgrade Header"), [">" + loc("Shop - Upgrade Maximum").replace("%s", chainsawname)])
+				else:
+					amount_wood -= upgrade_prices["chainsaw_upgrades"]
+					upgrade_prices["chainsaw_upgrades"] = round(upgrade_prices["chainsaw_upgrades"] * 1.1)
+					oldtext = chainsaw_upgrade_mod[chainsaw_upgrade_status]["mod"].replace("%s", chainsawname)
+					newname = chainsaw_upgrade_mod[chainsaw_upgrade_status]["name"].replace("%s", chainsawname)
+					MENU(loc("Shop - Upgrade Header"), [oldtext, loc("Shop - Upgrade Name").replace("%s", newname), ">" + loc("Menus - Exit")])
+					chainsaw_upgrade_status += 1
+					# Apply instant effects
+					effect = chainsaw_upgrade_mod[chainsaw_upgrade_status - 1]["instant"]
+					if effect["type"] == "heat":
+						max_chainsaw_heat += effect["amount"]
+					elif effect["type"] == "power":
+						chainsaw_strength += effect["amount"]
+					elif effect["type"] == "cooling":
+						chainsaw_cooling += effect["amount"]
+					elif effect["type"] == "range":
+						chainsaw_range += effect["amount"]
 
 def SETTINGS():
 	global SHOW_DEBUGS
@@ -527,10 +532,14 @@ def GAMEPLAY():
 					for i in range(chainsaw_upgrade_status):
 						effect = chainsaw_upgrade_mod[i]["random"]
 						for t in h.trees:
-							if random.random() < 0.0005:
-								# Do the effect
-								if effect == "obliterate":
-									t["treeStrength"] = 0
+							if t["maxTreeStrength"] >= 0:
+								if random.random() < 0.0003 * i:
+									# Do the effect
+									if effect == "destroy":
+										t["treeStrength"] = 0
+									elif effect == "remove":
+										t["treeStrength"] = 0
+										t["maxTreeStrength"] = 1
 				# Check for collisions
 				tree_x = cum_x + h.treeoffset
 				for t in h.trees:
