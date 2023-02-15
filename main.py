@@ -1,15 +1,17 @@
 #!/usr/bin/python3
 
-import pygame
+import webgame as pygame
 import random
 import sounds
 import json
 from localization import loc, set_lang, getlanglist, get_lang
+from bitrender.bitrender import exec_stage as bitrender_exec_stage, read_stage as bitrender_read_stage
+from bitrender.bitseq import upload as bitseq_upload, ReadableBuffer
 
 SHOW_DEBUGS = False
 MOBILE_VERSION = False
 
-screensize: "tuple[int, int]" = (500, 500)
+screensize: "tuple[int, int]" = (100, 100)
 screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 
 pygame.font.init()
@@ -51,7 +53,7 @@ def MENU(headertext, items, enableeasteregg=False):
 						eastereggprogress = 0
 		screen.fill((255, 255, 255))
 		# HEADER
-		header = menufont.render(headertext, 1, (0, 0, 0))
+		header = menufont.render(headertext, True, (0, 0, 0))
 		screen.blit(header, ((screensize[0] // 2) - (header.get_width() // 2), 10))
 		pygame.draw.line(screen, (0, 0, 0), (0, header.get_height() + 20), (screensize[0], header.get_height() + 20), 5)
 		last_height = header.get_height() * 1.5
@@ -59,9 +61,9 @@ def MENU(headertext, items, enableeasteregg=False):
 		btnindex = 0
 		for itemtext in items:
 			if itemtext.startswith(">"):
-				btn_text = menufont.render(itemtext[1:], 1, (0, 0, 0)) # Render the stripped text.
+				btn_text = menufont.render(itemtext[1:], True, (0, 0, 0)) # Render the stripped text.
 			else:
-				btn_text = menufont.render(itemtext, 1, (0, 0, 0)) # Render the text.
+				btn_text = menufont.render(itemtext, True, (0, 0, 0)) # Render the text.
 			buttonPadding = 10 # Amount of padding around the text.
 			buttonY = last_height + buttonPadding + 40 # Top of button: bottom of last item + padding + extra padding.
 			buttonRect = pygame.Rect(buttonPadding, buttonY, btn_text.get_height(), btn_text.get_height()) # Dimensions of the button.
@@ -304,49 +306,21 @@ def SAVELOAD():
 						world[i].trees[j]["hitbox"] = stump["hitbox"]
 						world[i].trees[j]["img"] = stump["img"]
 
-def drawHouse(personStatus) -> pygame.Surface:
-	house: pygame.Surface = pygame.Surface((300, 300), pygame.SRCALPHA)
-	house.fill((255, 255, 255, 0))
-	# Base
-	pygame.draw.rect(house, (200, 200, 255), pygame.Rect(50, 100, 200, 200))
-	pygame.draw.rect(house, (50, 0, 10), pygame.Rect(50, 100, 200, 200), 10)
-	pygame.draw.polygon(house, (200, 200, 255), ((50, 100), (150, 0), (250, 100)))
-	pygame.draw.polygon(house, (50, 0, 10), ((50, 100), (150, 0), (250, 100)), 10)
-	# Door
-	if personStatus < 61:
-		pygame.draw.rect(house, (100, 100, 100), pygame.Rect(85, 200, 50, 90))
-		pygame.draw.circle(house, (0, 0, 0), (100, 245), 5)
-	else:
-		pygame.draw.rect(house, (255, 255, 255), pygame.Rect(85, 200, 50, 90))
-		pygame.draw.rect(house, (100, 100, 100), pygame.Rect(125, 200, 10, 90))
-	# Window
-	if personStatus < 2:
-		pygame.draw.rect(house, (150, 150, 100) if personStatus == 1 else (50, 50, 50), pygame.Rect(160, 135, 60, 60))
-		pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60), 10)
-		pygame.draw.line(house, (50, 0, 10), (190, 135), (190, 195), 10)
-		pygame.draw.line(house, (50, 0, 10), (160, 165), (220, 165), 10)
-	elif personStatus <= 15:
-		pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60))
-	else:
-		pygame.draw.rect(house, (150, 150, 100), pygame.Rect(160, 135, 60, 60))
-		pygame.draw.rect(house, (50, 0, 10), pygame.Rect(160, 135, 60, 60), 10)
-	return house
+_house_dat = bitseq_upload("house.dat")
+_house_dat = ReadableBuffer(_house_dat)
+_house_dat = bitrender_read_stage(_house_dat)
+def drawHouse(personStatus: int) -> pygame.Surface:
+	house = bitrender_exec_stage(_house_dat, {"personStatus": personStatus})
+	return house[0]
 
+_tree_dat = bitseq_upload("tree.dat")
+_tree_dat = ReadableBuffer(_tree_dat)
+_tree_dat = bitrender_read_stage(_tree_dat)
 def drawTree(x) -> dict:
-	tree: pygame.Surface = pygame.Surface((200, 200), pygame.SRCALPHA)
-	tree.fill((255, 255, 255, 0))
-	treeX = 50
-	treeMod = 1 + ((x * x) / 10000000)
-	treeWidth = random.randint(round(30 * treeMod), round(65 * treeMod))
-	treeHeight = random.randint(round(50 * treeMod), round(100 * treeMod)) + (treeWidth / 2)
-	# Base
-	pygame.draw.rect(tree, (100, 50, 0), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight))
-	pygame.draw.rect(tree, (50, 0, 10), pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight), 10)
-	# Leaves
-	pygame.draw.circle(tree, (0, 150, 0), (treeX + (treeWidth / 2), 200 - treeHeight), 50)
-	return {"img": tree, "hitbox": pygame.Rect(treeX, 200 - treeHeight, treeWidth, treeHeight + playersize), "maxTreeStrength": (treeWidth * treeHeight) // 100, "treeStrength": (treeWidth * treeHeight) // 100, "treeWidth": treeWidth}
+	tree = bitrender_exec_stage(_tree_dat, {"x": x})
+	return {"img": tree[0], "hitbox": pygame.Rect(tree[1]["treeX"], 200 - tree[1]["treeHeight"], tree[1]["treeWidth"], tree[1]["treeHeight"] + playersize), "maxTreeStrength": (tree[1]["treeWidth"] * tree[1]["treeHeight"]) // 100, "treeStrength": (tree[1]["treeWidth"] * tree[1]["treeHeight"]) // 100, "treeWidth": tree[1]["treeWidth"]}
 
-def drawTreeStump(oldTreeWidth) -> pygame.Surface:
+def drawTreeStump(oldTreeWidth) -> dict:
 	tree: pygame.Surface = pygame.Surface((200, 200), pygame.SRCALPHA)
 	tree.fill((255, 255, 255, 0))
 	treeX = 50 + random.randint(-5, 5)
@@ -434,12 +408,12 @@ sounds_active: bool = True
 
 world: "list[House]" = []
 people: "list[Person]" = []
-playerpos: "list[int, int]" = [0, 150] # CENTER position of player
-playerv: "list[int, int]" = [0, 0] # Velocity of player
+playerpos: "list[int]" = [0, 150] # CENTER position of player
+playerv: "list[int]" = [0, 0] # Velocity of player
 amount_wood: int = 0
 chainsaw_heat: int = 0
 chainsaw_strength: int = 1
-chainsaw_cooling: int = 0.4
+chainsaw_cooling: float = 0.4
 chainsaw_range: int = 50
 chainsaw_upgrade_status: int = 0
 f = open("upgrades.json", "r")

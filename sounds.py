@@ -1,30 +1,40 @@
 import pygame.mixer as mixer
 
-mixer.init()
+can_play_sounds = False
+try:
+	mixer.init()
+	can_play_sounds = True
+except:
+	can_play_sounds = False
+	print("ERROR: CANNOT PLAY SOUNDS\n")
 
-chainsaw = mixer.Sound('assets/chainsaw-07-combined.wav')
-chainsaw_end = mixer.Sound('assets/chainsaw-01-end.wav')
+if can_play_sounds:
+	chainsaw = mixer.Sound('assets/chainsaw-07-combined.wav')
+	chainsaw_end = mixer.Sound('assets/chainsaw-01-end.wav')
 
-chainsaw_channel = mixer.find_channel(True)
+	chainsaw_channel = mixer.find_channel(True)
 
 def start_chainsaw():
-	if sounds_active:
+	if can_play_sounds and sounds_active:
 		chainsaw_channel.play(chainsaw, loops=-1)
 
 def stop_chainsaw():
-	if sounds_active:
+	if can_play_sounds and sounds_active:
 		chainsaw_channel.stop()
 		chainsaw_channel.play(chainsaw_end)
 
 def menu_start():
+	if not can_play_sounds: return
 	mixer.music.load('assets/9. KIWF+More+Scared+of+You.wav')
 	mixer.music.play(-1)
 
 def gameplay_start():
+	if not can_play_sounds: return
 	mixer.music.load('assets/5. black_game_music.wav')
 	mixer.music.play(-1)
 
 def stop_background():
+	if not can_play_sounds: return
 	mixer.music.stop()
 
 chainsaw_active_status = False
