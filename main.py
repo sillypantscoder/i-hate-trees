@@ -415,17 +415,8 @@ class Person:
 		self.y = 200 - playersize
 		self.v = [0, 0]
 		self.img = drawPerson()
-		self.health = random.randint(60 * 5, 60 * 30)
 		self.canmoveleft = True
 		self.canmoveright = True
-	def draw(self) -> pygame.Surface:
-		r = self.img.copy()
-		# Health bar
-		barWidth = 60
-		barHeight = 10
-		pygame.draw.rect(r, (255, 0, 0), pygame.Rect((r.get_width() / 2) - (barWidth / 2), 10, barWidth, barHeight))
-		pygame.draw.rect(r, (0, 255, 0), pygame.Rect((r.get_width() / 2) - (barWidth / 2), 10, barWidth * (self.health / (60 * 5)), barHeight))
-		return r
 	def kill(self):
 		hit = pygame.Rect(self.x, screensize[1] - self.y, self.img.get_width(), self.img.get_height())
 		for i in range(300):
@@ -656,7 +647,7 @@ def GAMEPLAY():
 						# Add + particle
 						textS = font.render(f"+{round(t['maxTreeStrength'])}", True, (0, 0, 0, 0), (255, 255, 255, 128))
 						particles.append({
-							"pos": [*playerpos],
+							"pos": [playerpos[0] - (textS.get_width() / 2), playerpos[1]],
 							"v": [0, 0],
 							"time": 80,
 							"img": textS,
@@ -779,7 +770,7 @@ def GAMEPLAY():
 				particles.remove(p)
 		# Tick the people
 		for p in people:
-			screen.blit(p.draw(), (p.x + scroll, screensize[1] - p.y)) # Draw
+			screen.blit(p.img, (p.x + scroll, screensize[1] - p.y)) # Draw
 			p.x += p.v[0]
 			p.y += p.v[1]
 			p.v[0] *= 0.7
@@ -787,9 +778,6 @@ def GAMEPLAY():
 			if p.y < p.img.get_height(): # Collision with floor
 				p.y = p.img.get_height()
 				p.v[1] = 0
-			p.health -= 1
-			if p.health <= 0:
-				people.remove(p)
 			# Move towards player
 			if p.x < playerpos[0] + (p.img.get_width() / -2):
 				if p.canmoveright:
