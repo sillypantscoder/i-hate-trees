@@ -415,7 +415,7 @@ class Person:
 		self.y = 200 - playersize
 		self.v = [0, 0]
 		self.img = drawPerson()
-		self.health = 60 * 5
+		self.health = random.randint(60 * 5, 60 * 30)
 		self.canmoveleft = True
 		self.canmoveright = True
 	def draw(self) -> pygame.Surface:
@@ -428,7 +428,7 @@ class Person:
 		return r
 	def kill(self):
 		hit = pygame.Rect(self.x, screensize[1] - self.y, self.img.get_width(), self.img.get_height())
-		for i in range(30):
+		for i in range(300):
 			particlesize = random.randint(1, 20)
 			p = pygame.Surface((particlesize, particlesize))
 			p.fill(random.choice([
@@ -441,7 +441,7 @@ class Person:
 					random.randint(hit.left, hit.right),
 					screensize[1] - random.randint(hit.top, hit.bottom)
 				],
-				"v": [random.randint(-7, 7) / 10, random.randint(7, 14) / 10],
+				"v": [random.randint(-70, 70) / 10, random.randint(7, 100) / 10],
 				"time": random.randint(35, 120),
 				"img": p,
 				"gravity": 0.1
@@ -653,6 +653,16 @@ def GAMEPLAY():
 						t["img"] = stump["img"]
 						# Get wood
 						amount_wood = round(amount_wood + t["maxTreeStrength"])
+						# Add + particle
+						textS = font.render(f"+{round(t['maxTreeStrength'])}", True, (0, 0, 0, 0), (255, 255, 255, 128))
+						particles.append({
+							"pos": [*playerpos],
+							"v": [0, 0],
+							"time": 80,
+							"img": textS,
+							"gravity": -0.03
+						})
+						# Reset tree strength
 						t["maxTreeStrength"] = -1
 						# Add lots of wood particles
 						for i in range(30):
@@ -784,17 +794,17 @@ def GAMEPLAY():
 			if p.x < playerpos[0] + (p.img.get_width() / -2):
 				if p.canmoveright:
 					# Move right
-					p.v[0] += 0.4
+					p.v[0] += 0.8
 				else:
 					# Jump
-					p.v[1] += 0.55
+					p.v[1] += 0.7
 			if p.x > playerpos[0] + (p.img.get_width() / -2):
 				if p.canmoveleft:
 					# Move left
-					p.v[0] -= 0.4
+					p.v[0] -= 0.8
 				else:
 					# Jump
-					p.v[1] += 0.55
+					p.v[1] += 0.7
 			p.canmoveleft = True
 			p.canmoveright = True
 		# Draw the text
