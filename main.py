@@ -426,6 +426,27 @@ class Person:
 		pygame.draw.rect(r, (255, 0, 0), pygame.Rect((r.get_width() / 2) - (barWidth / 2), 10, barWidth, barHeight))
 		pygame.draw.rect(r, (0, 255, 0), pygame.Rect((r.get_width() / 2) - (barWidth / 2), 10, barWidth * (self.health / (60 * 5)), barHeight))
 		return r
+	def kill(self):
+		hit = pygame.Rect(self.x, screensize[1] - self.y, self.img.get_width(), self.img.get_height())
+		for i in range(30):
+			particlesize = random.randint(1, 20)
+			p = pygame.Surface((particlesize, particlesize))
+			p.fill(random.choice([
+				(168, 84, 50),
+				(161, 39, 39),
+				(250, 32, 32)
+			]))
+			particles.append({
+				"pos": [
+					random.randint(hit.left, hit.right),
+					screensize[1] - random.randint(hit.top, hit.bottom)
+				],
+				"v": [random.randint(-7, 7) / 10, random.randint(7, 14) / 10],
+				"time": random.randint(35, 120),
+				"img": p,
+				"gravity": 0.1
+			})
+		people.remove(self)
 
 max_chainsaw_heat: int = 100
 playersize: int = 10
@@ -445,6 +466,7 @@ chainsaw_upgrade_status: int = 0
 f = open("upgrades.json", "r")
 chainsaw_upgrade_mod: "list[dict]" = json.loads(f.read())
 f.close()
+particles = []
 
 def GAMEPLAY():
 	global screen
@@ -455,6 +477,7 @@ def GAMEPLAY():
 	global amount_wood
 	global chainsaw_heat
 	global playerrect
+	global particles
 
 	particles = []
 	chainsaw0 = pygame.image.load("assets/chainsaw_0.png")
@@ -570,6 +593,7 @@ def GAMEPLAY():
 					chainsaw = pygame.Rect(playerpos[0] - (chainsaw_range / 2), (screensize[1] - playerpos[1]) - (chainsaw_range / 2), chainsaw_range, chainsaw_range)
 					if chainsaw_heat < max_chainsaw_heat:
 						if keys[pygame.K_SPACE] or (MOBILE_VERSION and mousedown and mousepos[1] > screensize[1] * (2 / 3)):
+							# The chainsaw is active!
 							sounds.chainsaw_active()
 							if SHOW_DEBUGS: pygame.draw.rect(screen, (0, 0, 255), chainsaw.move(scroll, 0), 1) # Active chainsaw hitbox
 							chstatus = random.choice([True, False])
@@ -595,6 +619,11 @@ def GAMEPLAY():
 										"img": wood,
 										"gravity": 0.1
 									})
+							# Check for people nearby
+							for p in people:
+								hitbox = pygame.Rect(p.x, screensize[1] - p.y, p.img.get_width(), p.img.get_height())
+								if hitbox.move(scroll, 0).colliderect(chainsaw.move(scroll, 0)):
+									p.kill()
 					else:
 						if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1) # Overheated chainsaw hitbox
 						if keys[pygame.K_SPACE] or (MOBILE_VERSION and mousedown and mousepos[1] > screensize[1] * (2 / 3)):
