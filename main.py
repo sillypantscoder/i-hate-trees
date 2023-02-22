@@ -242,7 +242,7 @@ def SETTINGS():
 			if option == -1:
 				return False
 			else:
-				set_lang(langs[option])
+				set_lang(langs[option][1:])
 		# Save settings
 		f = open("settings.json", "w")
 		f.write(json.dumps({"show_debugs": SHOW_DEBUGS, "background_music": background_music, "sounds_active": sounds_active, "mobile_version": MOBILE_VERSION, "lang": get_lang()}))
