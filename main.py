@@ -23,6 +23,8 @@ def MENU(headertext, items, enableeasteregg=False):
 	eastereggprogress = 0
 	eastereggtext = "super secret settings"
 
+	kbdselect = None
+
 	c = pygame.time.Clock()
 	running = True
 	while running:
@@ -49,6 +51,19 @@ def MENU(headertext, items, enableeasteregg=False):
 							eastereggprogress = 0
 					else:
 						eastereggprogress = 0
+				if event.key == pygame.K_UP:
+					if kbdselect == None:
+						kbdselect = len(items) - 1
+					else: kbdselect -= 1
+					if kbdselect < 0: kbdselect = None
+				elif event.key == pygame.K_DOWN:
+					if kbdselect == None:
+						kbdselect = 0
+					else: kbdselect += 1
+					if kbdselect >= len(items): kbdselect = None
+				elif event.key in [pygame.K_RETURN, pygame.K_SPACE]:
+					if kbdselect != None:
+						return kbdselect
 		screen.fill((255, 255, 255))
 		# HEADER
 		header = menufont.render(headertext, 1, (0, 0, 0))
@@ -73,6 +88,8 @@ def MENU(headertext, items, enableeasteregg=False):
 				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the hovered button.
 				if clicked: # If the text is clicked...
 					return btnindex # Return the index of the clicked button.
+			if kbdselect == btnindex: # Also, if we're selecting this with the keyboard...
+				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the selected button.
 			last_height = buttonY + btn_text.get_height() + buttonPadding
 			btnindex += 1
 		# Flip
@@ -490,7 +507,7 @@ def GAMEPLAY():
 				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 				# Jinglefoodle Bingledoodle Quandavius Quanderfoodle the Third died of air traffic
 			elif event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_ESCAPE:
+				if event.key in [pygame.K_ESCAPE, pygame.K_BACKQUOTE]:
 					return True
 			elif event.type == pygame.MOUSEBUTTONDOWN:
 				if event.button == 1:
@@ -619,6 +636,22 @@ def GAMEPLAY():
 						if SHOW_DEBUGS: pygame.draw.rect(screen, (255, 150, 0), chainsaw.move(scroll, 0), 1) # Overheated chainsaw hitbox
 						if keys[pygame.K_SPACE] or (MOBILE_VERSION and mousedown and mousepos[1] > screensize[1] * (2 / 3)):
 							sounds.chainsaw_active()
+							# Add long-lived smoke particle
+							if random.random() < 0.16:
+								woodsize = random.randint(25, 50)
+								wood = pygame.Surface((woodsize, woodsize), pygame.SRCALPHA)
+								wood.fill((0, 0, 0, 0))
+								pygame.draw.circle(wood, (0, 0, 0, 100), (woodsize / 2, woodsize / 2), woodsize / 2)
+								particles.append({
+									"pos": [
+										playerpos[0] + (woodsize / -2),
+										playerpos[1] - (woodsize / -2)
+									],
+									"v": [random.randint(-7, 7) / 10, random.randint(7, 14) / 10],
+									"time": random.randint(30, 180),
+									"img": wood,
+									"gravity": 0
+								})
 						# Add smoke particle
 						if random.random() < 0.08:
 							woodsize = random.randint(25, 50)

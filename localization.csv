@@ -4,16 +4,16 @@ Home screen - Shop,shop,búð
 Home screen - Settings,settings,stillingar
 Home screen - Save/load,save/load,vista/hlaða
 Gameplay - Amount of wood,Wood,viður
-Gameplay - Death,You died!,
-Gameplay - Back to game,Back to game,
+Gameplay - Death,You died!,Þú dóst!
+Gameplay - Back to game,Back to game,Aftur til leiks
 Shop - Heat,upgrade heat capacity,bæta hitaþol
 Shop - Power,upgrade chainsaw power,Bæta styrk
 Shop - Cooling,upgrade cooling speed,Bæta kælihraða
 Shop - Range,upgrade chainsaw range,Bæta fjarlægð
 Shop - Upgrade,upgrade your chainsaw,Uppfæra keðjusögina
 Shop - Upgrade Header,upgrade,Gera betri
-Shop - Upgrade Maximum,You can't upgrade your %s.,
-Shop - Upgrade Name,So now it's called a %s.,
+Shop - Upgrade Maximum,You can't upgrade your %s.,þú getur ekki uppfært
+Shop - Upgrade Name,So now it's called a %s.,Núna er það kallað
 Menus - Exit,exit,Hætta
 Menus - Cancel,cancel,Hætta við
 Settings - Hitboxes,show colored rectangles,Sýna litaða ferhyrninga
@@ -29,6 +29,6 @@ Settings - Update Latest Version,(latest),(Nýjasta)
 Settings - Reset Here,Update to:,Uppfæra í
 Files - Save,save,vista
 Files - Load,load,hlaða
-Easter Egg - Title,yay!,
+Easter Egg - Title,yay!,yay!
 Easter Egg - Description,You found the easter egg!,
-Easter Egg - Button,Get 2000000 wood because why not,
+Easter Egg - Button,Get 2000000 wood because why not,náðu 2000000 viðarkubba út af því afhverju ekki
