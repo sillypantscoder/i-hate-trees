@@ -15,15 +15,13 @@ screen: pygame.Surface = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 pygame.font.init()
 font = pygame.font.SysFont("monospace", 20)
 
-def MENU(headertext, items, enableeasteregg=False):
+def MENU1(headertext, items, enableeasteregg=False):
 	global screen
 	global screensize
 
 	menufont = pygame.font.SysFont("monospace", 35)
 	eastereggprogress = 0
 	eastereggtext = "super secret settings"
-
-	kbdselect = None
 
 	c = pygame.time.Clock()
 	running = True
@@ -35,7 +33,6 @@ def MENU(headertext, items, enableeasteregg=False):
 				return -1
 			elif event.type == pygame.VIDEORESIZE:
 				screensize = event.size
-				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 			elif event.type == pygame.MOUSEBUTTONDOWN:
 				clicked = True
 			elif event.type == pygame.KEYDOWN:
@@ -51,50 +48,120 @@ def MENU(headertext, items, enableeasteregg=False):
 							eastereggprogress = 0
 					else:
 						eastereggprogress = 0
-				if event.key == pygame.K_UP:
-					if kbdselect == None:
-						kbdselect = len(items) - 1
-					else: kbdselect -= 1
-					if kbdselect < 0: kbdselect = None
-				elif event.key == pygame.K_DOWN:
-					if kbdselect == None:
-						kbdselect = 0
-					else: kbdselect += 1
-					if kbdselect >= len(items): kbdselect = None
-				elif event.key in [pygame.K_RETURN, pygame.K_SPACE]:
-					if kbdselect != None:
-						return kbdselect
 		screen.fill((255, 255, 255))
 		# HEADER
 		header = menufont.render(headertext, 1, (0, 0, 0))
 		screen.blit(header, ((screensize[0] // 2) - (header.get_width() // 2), 10))
 		pygame.draw.line(screen, (0, 0, 0), (0, header.get_height() + 20), (screensize[0], header.get_height() + 20), 5)
-		last_height = header.get_height() * 1.5
+		last_height = header.get_height() + 20
 		# BUTTONS
 		btnindex = 0
 		for itemtext in items:
+			last_height += 20
+			# Figure out what text to draw. Draw the selection circle if needed.
 			if itemtext.startswith(">"):
-				btn_text = menufont.render(itemtext[1:], 1, (0, 0, 0)) # Render the stripped text.
+				btn_text = menufont.render(itemtext[1:], 1, (0, 0, 0))
+				pygame.draw.circle(screen, (0, 0, 0), (30, last_height + 30), 20)
 			else:
-				btn_text = menufont.render(itemtext, 1, (0, 0, 0)) # Render the text.
-			buttonPadding = 10 # Amount of padding around the text.
-			buttonY = last_height + buttonPadding + 40 # Top of button: bottom of last item + padding + extra padding.
-			buttonRect = pygame.Rect(buttonPadding, buttonY, btn_text.get_height(), btn_text.get_height()) # Dimensions of the button.
-			if itemtext.startswith(">"):
-				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.5) # === Draw the button. ===
-			screen.blit(btn_text, (buttonRect.right + buttonPadding, buttonY)) # Draw the text.
-			textRect = pygame.Rect(0, buttonY, screensize[0], btn_text.get_height()) # Dimensions of the text.
-			if textRect.collidepoint(mousepos) and itemtext.startswith(">"): # If the mouse is over the text...
-				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the hovered button.
-				if clicked: # If the text is clicked...
-					return btnindex # Return the index of the clicked button.
-			if kbdselect == btnindex: # Also, if we're selecting this with the keyboard...
-				pygame.draw.circle(screen, (0, 0, 0), (buttonRect.centerx, buttonRect.centery), buttonRect.width * 0.7) # Draw the selected button.
-			last_height = buttonY + btn_text.get_height() + buttonPadding
+				btn_text = menufont.render(itemtext, 1, (0, 0, 0))
+			# Draw the text.
+			screen.blit(btn_text, (60, last_height + 10))
+			# IF we're hovering over the text...
+			if pygame.Rect(0, last_height, screensize[0], btn_text.get_height()).collidepoint(mousepos):
+				# Draw the extended circle.
+				pygame.draw.circle(screen, (0, 0, 0), (30, last_height + 30), 30)
+				# Also, if we're clicking, we can return this as well.
+				if clicked:
+					return btnindex
+			# Fix the offset for the next item.
+			last_height += btn_text.get_height() + 20
 			btnindex += 1
 		# Flip
 		pygame.display.flip()
 		c.tick(60)
+
+def MENU2(headertext, items, enableeasteregg=False):
+	global screen
+	global screensize
+
+	menufont = pygame.font.Font("assets/transportm.ttf", 35)
+	eastereggprogress = 0
+	eastereggtext = "super secret settings"
+
+	offsets = [0 for x in items]
+	isFirstFrame = True
+
+	c = pygame.time.Clock()
+	running = True
+	while running:
+		clicked = False
+		mousepos = pygame.mouse.get_pos()
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				exit()
+			elif event.type == pygame.VIDEORESIZE:
+				screensize = event.size
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				clicked = True
+			elif event.type == pygame.KEYDOWN:
+				# Easter egg
+				if enableeasteregg:
+					if event.unicode == eastereggtext[eastereggprogress]:
+						eastereggprogress += 1
+						if eastereggprogress == len(eastereggtext):
+							# wheeee
+							MENU(loc("Easter Egg - Title"), [loc("Easter Egg - Description"), ">" + loc("Easter Egg - Button")])
+							global amount_wood
+							amount_wood += 2000000
+							eastereggprogress = 0
+					else:
+						eastereggprogress = 0
+		screen.fill((255, 255, 255))
+		# HEADER
+		header = menufont.render(headertext, 1, (0, 0, 0))
+		screen.blit(header, (10, 10))
+		last_height = header.get_height() + 15
+		# BUTTONS
+		btnindex = 0
+		for itemtext in items:
+			last_height += 5
+			# Figure out what text to draw.
+			if itemtext.startswith(">"):
+				btn_text = menufont.render(itemtext[1:], 1, (0, 0, 0))
+			else:
+				btn_text = menufont.render(itemtext, 1, (100, 100, 100))
+			# IF we're hovering over the text...
+			if itemtext.startswith(">") and pygame.Rect(0, last_height - 5, screensize[0], btn_text.get_height() + 10).collidepoint(mousepos):
+				# Update the offset if this is the first frame.
+				# 	(This can occur if the player is already hovering over an
+				# 	 option when the game starts.)
+				if isFirstFrame:
+					offsets[btnindex] = 25
+				# Draw the selection circle.
+				pygame.draw.circle(screen, (0, 0, 0), (offsets[btnindex], last_height + (btn_text.get_height() // 2)), 10)
+				# Update the offset.
+				if offsets[btnindex] < 25:
+					offsets[btnindex] += (25 - offsets[btnindex]) / 4
+				# Also, if we're clicking, we can return this as well.
+				if clicked:
+					return btnindex
+			else:
+				# Update the offset.
+				if offsets[btnindex] > 0:
+					offsets[btnindex] += (0 - offsets[btnindex]) / 4
+			# Draw the text.
+			screen.blit(btn_text, (25 + offsets[btnindex], last_height))
+			# Fix the offset for the next item.
+			last_height += btn_text.get_height() + 5
+			btnindex += 1
+		# Flip
+		pygame.display.flip()
+		c.tick(60)
+		isFirstFrame = False
+
+def MENU(headertext, items, enableeasteregg=False):
+	return MENU1(headertext, items, enableeasteregg)
 
 def MAIN():
 	global SHOW_DEBUGS
@@ -465,7 +532,7 @@ world: "list[House]" = []
 people: "list[Person]" = []
 playerpos: "list[int, int]" = [0, 150] # CENTER position of player
 playerv: "list[int, int]" = [0, 0] # Velocity of player
-amount_wood: int = 0
+amount_wood: int = 200000
 chainsaw_heat: int = 0
 chainsaw_strength: int = 1
 chainsaw_cooling: int = 0.4
@@ -504,7 +571,6 @@ def GAMEPLAY():
 				return False
 			elif event.type == pygame.VIDEORESIZE:
 				screensize = event.size
-				screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 				# Jinglefoodle Bingledoodle Quandavius Quanderfoodle the Third died of air traffic
 			elif event.type == pygame.KEYDOWN:
 				if event.key in [pygame.K_ESCAPE, pygame.K_BACKQUOTE]:
